@@ -4,7 +4,7 @@
 <title>Crib 21-10</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Public+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 /* Layout: a felt table seen from above. Four other seats around the edge, the 21-10 board and the play area in the middle, my own hand along the bottom. */
 :root {
@@ -202,6 +202,70 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px 
 .m3d .boardwrap, .m3d .g-top, .m3d .g-left, .m3d .g-right { display: none; }
 .app.m3d .felt { grid-template-columns: minmax(0, 1fr); grid-template-areas: "center" "me"; }
 .m3d .zrow > .zone:first-child { display: none; }
+
+/* table music */
+.music { margin: 12px 0 4px; padding: 10px 12px; border-radius: 16px; background: var(--glass); border: 1px solid var(--line); }
+.music .mrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.music .mrow b { color: var(--brass); font-family: var(--font-display); font-weight: 400; letter-spacing: .04em; }
+.music input { flex: 1 1 220px; min-width: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0, 0, 0, .25); color: var(--text); font: 14px var(--font-body); }
+.music .mnote { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.music .mplayer { margin-top: 8px; }
+.music .mplayer:empty { display: none; }
+
+/* ===== v6 modern UI (felt table stays classic green) ===== */
+:root {
+  --bg: #0b0f0e;
+  --surface: rgba(255, 255, 255, .045);
+  --surface-2: rgba(255, 255, 255, .08);
+  --glass: rgba(14, 20, 18, .62);
+  --line: rgba(255, 255, 255, .09);
+  --text: #eef2ef;
+  --muted: #8fa097;
+  --brass: #e3c27a;
+  --accent: #e3c27a;
+  --font-display: 'Sora', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+body { font: 15px/1.45 var(--font-body); letter-spacing: -.005em; background: radial-gradient(1200px 600px at 50% -10%, #14221c 0%, var(--bg) 60%) fixed; -webkit-font-smoothing: antialiased; }
+#app { max-width: 1320px; }
+.top { padding: 6px 2px 14px; }
+.top h1 { font: 700 20px/1 var(--font-display); letter-spacing: -.01em; color: var(--text); display: flex; align-items: center; gap: 10px; }
+.top h1::before { content: ''; width: 10px; height: 10px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent); }
+.chip { padding: 5px 11px; background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(10px); font-weight: 500; }
+.nm input { background: var(--surface); border-radius: 99px; padding: 7px 14px; }
+.btn { border-radius: 99px; padding: 9px 16px; background: var(--surface-2); border: 1px solid var(--line); font-weight: 600; letter-spacing: -.005em; transition: background .15s, transform .1s, box-shadow .15s; }
+.btn:hover:not(:disabled) { background: rgba(255, 255, 255, .13); }
+.btn:active:not(:disabled) { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: #231a06; box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 30%, transparent); }
+.btn.primary:hover:not(:disabled) { background: #f0d08c; }
+.btn.small { padding: 5px 12px; }
+.banner { border: 1px solid var(--line); border-radius: 18px; background: var(--glass); backdrop-filter: blur(14px); min-height: 54px; box-shadow: 0 2px 20px rgba(0, 0, 0, .25); }
+.banner .big { font: 700 19px/1.2 var(--font-display); letter-spacing: -.01em; }
+.banner.mine { border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 12%, var(--glass)); }
+/* the table: no chunky wood frame in the page, the 3D felt+wood rail is the star */
+.felt { border: 1px solid var(--line); border-radius: 26px; padding: 12px; background: var(--surface); box-shadow: 0 20px 60px rgba(0, 0, 0, .45); }
+.app.m3d .felt { gap: 12px; }
+.stage3d { border-radius: 18px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), 0 10px 30px rgba(0, 0, 0, .4); }
+.vbtns button { background: rgba(10, 16, 14, .6); backdrop-filter: blur(10px); font-weight: 600; letter-spacing: 0; padding: 8px 13px; transition: background .15s; }
+.vbtns button:hover { background: rgba(10, 16, 14, .88); }
+.seat, .zone, .music { border: 1px solid var(--line); border-radius: 18px; background: var(--glass); backdrop-filter: blur(12px); }
+.seat.turn { border-color: var(--c); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 40%, transparent), 0 8px 28px color-mix(in srgb, var(--c) 28%, transparent); }
+.seat .score .n { font: 700 28px/1 var(--font-display); letter-spacing: -.02em; }
+.tag { border-radius: 99px; padding: 2px 8px; letter-spacing: .05em; }
+.zone h3 { letter-spacing: .1em; }
+.countnum { font: 700 40px/1 var(--font-display); letter-spacing: -.02em; }
+.total .t { font: 700 30px/1 var(--font-display); }
+.countpanel .hd b { font: 700 17px/1.1 var(--font-display); }
+.lines li { border-radius: 12px; background: var(--surface); }
+.music .mrow b { font: 700 14px var(--font-display); letter-spacing: 0; }
+.music input { border-radius: 99px; padding: 9px 15px; background: var(--surface); }
+.pop { border-radius: 18px; background: rgba(12, 18, 16, .88); backdrop-filter: blur(16px); border-width: 1px; }
+.pop b { font: 700 20px var(--font-display); }
+.confirm { border-radius: 99px; }
+.help summary { font-weight: 600; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.m3d .handwrap .hand { display: none; }
+.m3d .mepanel { align-items: center; }
 
 </style></head><body>
 <div id="app"></div>
@@ -436,6 +500,61 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
 
 </script>
 <script>
+/* Table sounds, all synthesized with WebAudio (no files): card flip/slide/place, shuffle, peg tick, score ding, chimes. */
+window.CribSFX = (function () {
+  let ac = null, master = null, nbuf = null, muted = false;
+  try { muted = localStorage.getItem('crib.mute') === '1'; } catch (e) { }
+  function ctx() {
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+      ac = new AC(); master = ac.createGain(); master.gain.value = .8;
+      const comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
+      nbuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = nbuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  function noise(t, dur, o) {
+    o = o || {}; const s = ac.createBufferSource(); s.buffer = nbuf; s.loop = true;
+    const f = ac.createBiquadFilter(); f.type = o.type || 'bandpass'; f.frequency.setValueAtTime(o.f || 2000, t); if (o.fEnd) f.frequency.exponentialRampToValueAtTime(o.fEnd, t + dur); f.Q.value = o.q || 1;
+    const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(o.gain || .3, t + (o.attack || .003)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t, Math.random() * .6); s.stop(t + dur + .05);
+  }
+  function tone(t, freq, dur, o) {
+    o = o || {}; const os = ac.createOscillator(); os.type = o.type || 'sine'; os.frequency.setValueAtTime(freq, t); if (o.fEnd) os.frequency.exponentialRampToValueAtTime(o.fEnd, t + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(o.gain || .2, t + (o.attack || .004)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    os.connect(g); g.connect(master); os.start(t); os.stop(t + dur + .05);
+  }
+  const play = fn => { if (muted) return; const a = ctx(); if (!a) return; try { fn(a.currentTime + .005); } catch (e) { } };
+  const api = {
+    unlock() { ctx(); },
+    get muted() { return muted; },
+    toggle() { muted = !muted; try { localStorage.setItem('crib.mute', muted ? '1' : '0'); } catch (e) { } if (!muted) play(t => tone(t, 660, .12, { gain: .12 })); return muted; },
+    flip() { play(t => { noise(t, .07, { f: 3600, fEnd: 1700, q: 1.2, gain: .35 }); noise(t + .06, .05, { f: 2400, q: 2, gain: .2 }); }); },
+    slide(v) { play(t => noise(t, .14, { type: 'highpass', f: 1500, fEnd: 3200, q: .5, gain: .06 + (v || .5) * .12, attack: .02 })); },
+    place() { play(t => { tone(t, 150, .09, { fEnd: 60, gain: .3 }); noise(t, .05, { f: 1100, q: 1, gain: .35 }); }); },
+    deal() { play(t => { noise(t, .09, { type: 'highpass', f: 2200, fEnd: 4200, gain: .16, attack: .01 }); noise(t + .07, .04, { f: 1000, gain: .12 }); }); },
+    shuffle() { play(t => { for (let i = 0; i < 14; i++) noise(t + i * .045 + Math.random() * .015, .05, { f: 2500 + Math.random() * 1500, q: 1.5, gain: .2 + Math.random() * .1 }); noise(t + .62, .12, { f: 1000, gain: .25 }); }); },
+    pegUp() { play(t => tone(t, 1900, .035, { type: 'triangle', gain: .12 })); },
+    pegDrop() { play(t => { tone(t, 560, .06, { fEnd: 300, type: 'triangle', gain: .28 }); noise(t, .03, { f: 1400, gain: .22 }); }); },
+    deny() { play(t => { tone(t, 180, .16, { type: 'sawtooth', fEnd: 120, gain: .1 }); }); },
+    score(p) {
+      p = Math.max(1, +p || 1);
+      play(t => {
+        const base = [659, 784, 988, 1175, 1319, 1568];
+        const n = p <= 2 ? 1 : p <= 5 ? 2 : p <= 9 ? 3 : p <= 15 ? 4 : 6;
+        for (let i = 0; i < n; i++) { tone(t + i * .075, base[i], .35, { gain: .11, type: 'sine' }); tone(t + i * .075, base[i] * 2, .25, { gain: .04, type: 'triangle' }); }
+      });
+    },
+    chime() { play(t => { tone(t, 660, .3, { gain: .13 }); tone(t + .13, 880, .4, { gain: .13 }); }); },
+    win() { play(t => { [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(t + i * .13, f, .5, { gain: .13, type: 'triangle' })); }); }
+  };
+  document.addEventListener('pointerdown', () => ctx(), { once: true, capture: true });
+  return api;
+})();
+
+</script>
+<script>
 /* 3D table: a three.js scene driven by the same state as the 2D UI.
    Board = the real v52 face texture on an extruded slab. Pegs, cards and seat plates live in mm. */
 (function () {
@@ -558,7 +677,7 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
     const edgeGeo = new T.BoxGeometry(CW + 5, .5, CH + 5);
     const edgeMats = {};
     function buildCard(id, faceUp, edge) {
-      const g = new T.Group();
+      const g = new T.Group(); g.rotation.order = 'YXZ';
       const body = new T.Mesh(bodyGeo, bodyMat); body.castShadow = true; body.receiveShadow = true; g.add(body);
       const top = new T.Mesh(faceGeo, cardMat(faceUp ? id : -1)); top.position.y = .74; g.add(top);
       const bot = new T.Mesh(backGeo, cardMat(-1)); bot.position.y = -.04; g.add(bot);
@@ -566,13 +685,32 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
       return g;
     }
     const items = new Map();
-    function put(key, id, faceUp, x, y, z, yaw, spawn, edge) {
+    const S = window.CribSFX || new Proxy({}, { get: () => () => { } });
+    let resumeAt = 0, lastDealSnd = 0;
+    const local = new Map();          // my own in-flight / just-released moves
+    let cdrag = null, mineDrag = null, hoverIt = null;
+    const HAND_Z = 296;
+    function rTag(gk) { const G = api.G, b = (G.gid || '') + ':' + G.round; if (gk.startsWith('cnt')) return b + ':c' + (G.cnt ? G.cnt.idx : 0); if (gk.startsWith('run')) return b + ':p'; return b; }
+    function getOvr(gk) {
+      const rt = rTag(gk), l = local.get(gk), dr = cdrag && !cdrag.mine && cdrag.it.gk === gk;
+      if (dr && l) return l;
+      const r = (api.objs() || {})[gk]; if (r && r.r === rt) return r;
+      return (l && l.r === rt && Date.now() - l.t < 2500) ? l : null;
+    }
+    function put(key, gk, id, faceUp, x, y, z, yaw, spawn, edge) {
+      const o = gk ? getOvr(gk) : null;
+      if (o) { x += o.dx || 0; z += o.dz || 0; yaw += o.dr || 0; if (o.flip && id >= 0) faceUp = !faceUp; }
       let it = items.get(key);
       if (!it || it.id !== id || it.faceUp !== faceUp || it.edge !== edge) {
-        const grp = buildCard(id, faceUp, edge);
-        if (it) { scene.remove(it.grp); grp.position.copy(it.grp.position); grp.rotation.y = it.grp.rotation.y; }
-        else { grp.position.set(spawn.x, (spawn.y || 0) + 45, spawn.z); grp.rotation.y = yaw; }
-        scene.add(grp); it = { grp, id, faceUp, edge, key }; items.set(key, it);
+        const g = buildCard(id, faceUp, edge);
+        if (it) { scene.remove(it.obj); g.position.copy(it.obj.position); g.rotation.y = it.obj.rotation.y; }
+        else {
+          g.position.set(spawn.x, (spawn.y || 0) + 45, spawn.z); g.rotation.y = yaw;
+          const now = performance.now(); if (active && now - resumeAt > 2200 && now - lastDealSnd > 70) { lastDealSnd = now; S.deal(); }
+        }
+        scene.add(g); const body = g.children[0];
+        it = { obj: g, body, id, faceUp, edge, key, gk: gk || key, vy: 0, px: g.position.x, pz: g.position.z };
+        body.userData.it = it; items.set(key, it);
       }
       it.tx = x; it.ty = y; it.tz = z; it.tyaw = yaw; it.seen = true;
     }
@@ -651,7 +789,7 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
       const actor = inG ? api.actor() : null;
       for (let i = 0; i < 5; i++) {
         const sp = plates[i], sd = seats[i], k = rel(i), gm = seatGeo(k);
-        sp.position.set(gm.px, 40, gm.pz);
+        sp.position.set(gm.px, 40, gm.pz + (k === 0 && me >= 0 ? 62 : 0));
         discs[i].position.set(gm.cx, .25, gm.cz);
         const playing = inG && order.includes(i);
         const score = (G.scores && G.scores[i]) || 0, target = Math.min(score, 121);
@@ -666,33 +804,42 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
       const deckSpawn = { x: DECK_X, y: 4, z: PLAY_Z };
       const live = inG && G.phase !== 'over';
       if (live) {
-        for (let j = 0; j < 4; j++) put('deck:' + j, -1, false, DECK_X, 1 + j * 1.5, PLAY_Z, .02 * j, deckSpawn);
-        if (G.starter >= 0 && G.phase !== 'discard') put('starter', G.starter, true, DECK_X + 78, 1, PLAY_Z, 0, deckSpawn);
+        for (let j = 0; j < 4; j++) put('deck:' + j, 'deck', -1, false, DECK_X, 1 + j * 1.5, PLAY_Z, .02 * j, deckSpawn);
+        if (G.starter >= 0 && G.phase !== 'discard') put('starter', 'starter', G.starter, true, DECK_X + 78, 1, PLAY_Z, 0, deckSpawn);
         const cn = Math.min(G.crib ? G.crib.length : 0, 5), dcol = G.dealer >= 0 ? new T.Color(COL[G.dealer]).getHex() : 0;
-        for (let j = 0; j < cn; j++) put('crib:' + j, -1, false, CRIB_X, 1 + j * 1.5, PLAY_Z, -.03 * j, deckSpawn, dcol);
-        // other players' hands, fanned face-down in front of each seat
+        for (let j = 0; j < cn; j++) put('crib:' + j, 'crib', -1, false, CRIB_X, 1 + j * 1.5, PLAY_Z, -.03 * j, deckSpawn, dcol);
         order.forEach(s => {
           if (s === me) return;
           const n = G.phase === 'count' ? 0 : api.handCount(s), gm = seatGeo(rel(s)), ca = Math.cos(gm.yaw), sa = Math.sin(gm.yaw);
           for (let j = 0; j < n; j++) {
             const o = (j - (n - 1) / 2) * 26;
-            put('h:' + s + ':' + j, -1, false, gm.cx + ca * o, 1.2 + j * .9, gm.cz - sa * o, gm.yaw + (j - (n - 1) / 2) * .05, deckSpawn);
+            put('h:' + s + ':' + j, 'h' + s, -1, false, gm.cx + ca * o, 1.2 + j * .9, gm.cz - sa * o, gm.yaw + (j - (n - 1) / 2) * .05, deckSpawn);
           }
         });
         if (G.phase === 'play' && G.play) {
           const run = G.play.run || [], n = run.length;
           run.forEach((x, idx) => {
             const sg = seatGeo(rel(x.s)), tot = (n - 1) * 32;
-            put('run:' + idx, x.c, true, 10 - tot / 2 + idx * 32, 1.2 + idx * .9, PLAY_Z, ((x.c * 37) % 11 - 5) * .012, { x: sg.cx, y: 6, z: sg.cz }, new T.Color(COL[x.s]).getHex());
+            put('run:' + idx, 'run' + idx, x.c, true, 10 - tot / 2 + idx * 32, 1.2 + idx * .9, PLAY_Z, ((x.c * 37) % 11 - 5) * .012, { x: sg.cx, y: 6, z: sg.cz }, new T.Color(COL[x.s]).getHex());
           });
         }
         if (G.phase === 'count' && G.cnt) {
           const st = G.cnt.steps[G.cnt.idx], cs = st.cards.slice().sort((a, b) => E.rank(a) - E.rank(b) || E.suit(a) - E.suit(b));
           const all = cs.concat([G.starter]), sg = seatGeo(rel(st.s)), n = all.length, ecol = new T.Color(COL[st.s]).getHex();
-          all.forEach((c, j) => put('cnt:' + j, c, true, 10 + (j - (n - 1) / 2) * 72 + (j === n - 1 ? 18 : 0), 1.2, PLAY_Z, 0, { x: sg.cx, y: 6, z: sg.cz }, j === n - 1 ? 0xffd76a : ecol));
+          all.forEach((c, j) => put('cnt:' + j, 'cnt' + j, c, true, 10 + (j - (n - 1) / 2) * 72 + (j === n - 1 ? 18 : 0), 1.2, PLAY_Z, 0, { x: sg.cx, y: 6, z: sg.cz }, j === n - 1 ? 0xffd76a : ecol));
         }
+        // my own hand, face-up in front of me: click to select/play, or drag it onto the table
+        const mc = api.myCards();
+        const n = mc.cards.length;
+        mc.cards.forEach((c, j) => {
+          const sel = mc.sel.includes(c), o = (j - (n - 1) / 2);
+          let x = o * 58, z = HAND_Z + Math.abs(o) * 4 - (sel ? 22 : 0), y = 1.6 + j * .9 + (sel ? 8 : 0);
+          if (mineDrag && mineDrag.c === c) { x = mineDrag.x; z = mineDrag.z; y = 26; }
+          put('mh:' + c, null, c, true, x, y, z, -o * .035, { x: DECK_X, y: 6, z: PLAY_Z }, sel ? 0xffd76a : (mc.legal(c) ? 0x7ddc9b : 0));
+          items.get('mh:' + c).gk = 'mh';
+        });
       }
-      items.forEach((it, key) => { if (!it.seen) { scene.remove(it.grp); items.delete(key); } });
+      items.forEach((it, key) => { if (!it.seen) { scene.remove(it.obj); items.delete(key); } });
       syncPegs();
     }
 
@@ -710,7 +857,7 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
       camera.position.set(cam.tx + cam.dist * sp * Math.sin(cam.az), cam.ty + cam.dist * Math.cos(cam.pol), cam.tz + cam.dist * sp * Math.cos(cam.az));
       camera.lookAt(cam.tx, cam.ty, cam.tz);
     }
-    function goView(n) { Object.assign(goal, VIEWS[n]()); }
+    function goView(n) { const v = VIEWS[n](); v.az = goal.az + ang(goal.az, v.az); Object.assign(goal, v); }
 
     /* ---- overlay buttons ---- */
     const bar = document.createElement('div'); bar.className = 'vbtns';
@@ -720,43 +867,83 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
     bar.addEventListener('pointerdown', e => e.stopPropagation());
 
     /* ---- pointer input ---- */
-    const ray = new T.Raycaster(), v2 = new T.Vector2(), plane = new T.Plane(new T.Vector3(0, 1, 0), -BOARD_H), tmp = new T.Vector3();
+    const ray = new T.Raycaster(), v2 = new T.Vector2(), tmp = new T.Vector3();
+    const planeBoard = new T.Plane(new T.Vector3(0, 1, 0), -BOARD_H), planeTable = new T.Plane(new T.Vector3(0, 1, 0), -2);
     const pointers = new Map();
-    let orbit = null, pinch = null;
+    let orbit = null, pinch = null, lastTap = { k: '', t: 0 }, lastSend = 0;
     function setRay(e) { const r = canvas.getBoundingClientRect(); v2.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(v2, camera); }
-    function boardPt(e) { setRay(e); return ray.ray.intersectPlane(plane, tmp) ? { x: tmp.x + bw / 2, y: tmp.z - BOARD_Z + bh / 2 } : null; }
+    function boardPt(e) { setRay(e); return ray.ray.intersectPlane(planeBoard, tmp) ? { x: tmp.x + bw / 2, y: tmp.z - BOARD_Z + bh / 2 } : null; }
+    function tablePt(e, y) { setRay(e); planeTable.constant = -(y == null ? 2 : y); return ray.ray.intersectPlane(planeTable, tmp) ? { x: tmp.x, z: tmp.z } : null; }
+    function pickCard(e) {
+      setRay(e); const bodies = []; items.forEach(it => bodies.push(it.body));
+      const h = ray.intersectObjects(bodies, false); return h.length ? { it: h[0].object.userData.it, d: h[0].distance, y: h[0].point.y } : null;
+    }
+    function sendOvr(gk, entry, end) {
+      entry.t = Date.now(); entry.end = !!end; local.set(gk, entry);
+      const now = performance.now(); if (!end && now - lastSend < 90) return; lastSend = now;
+      api.sendObj(gk, entry);
+    }
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('pointerdown', e => {
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       try { canvas.setPointerCapture(e.pointerId); } catch (_) { }
       if (pointers.size === 2) {
-        const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: goal.dist };
-        ui.drag = null; orbit = null; api.renderPegs(); return;
+        const [a, b] = [...pointers.values()];
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), dist: goal.dist, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, tx: goal.tx, tz: goal.tz };
+        ui.drag = null; orbit = null; cdrag = null; mineDrag = null; api.renderPegs(); sync(); return;
       }
       if (pointers.size > 2) return;
+      if (e.button === 2 || e.shiftKey) { orbit = { pan: true, sx: e.clientX, sy: e.clientY, tx: goal.tx, tz: goal.tz, moved: true }; e.preventDefault(); return; }
       setRay(e);
+      const hp = ray.intersectObjects(pegObjs.filter(o => o.visible), false);
+      const pc = pickCard(e), pt = boardPt(e);
       let hit = null;
-      const hs = ray.intersectObjects(pegObjs.filter(o => o.visible), false);
-      if (hs.length) hit = hs[0].object.userData.peg;
-      const pt = boardPt(e);
-      if (!hit && pt) { hit = api.pegAt(pt, 4.6); if (!hit && !ui.pegSel) hit = api.pegAt(pt, 11); }
+      if (hp.length && (!pc || hp[0].distance < pc.d)) hit = hp[0].object.userData.peg;
+      if (!hit && !pc && pt) { hit = api.pegAt(pt, 4.6); if (!hit && !ui.pegSel) hit = api.pegAt(pt, 11); }
       if (hit) {
         ui.drag = { s: hit.s, w: hit.w, x: pt ? pt.x : 0, y: pt ? pt.y : 0, sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId };
+        S.pegUp(); e.preventDefault(); return;
+      }
+      if (pc) {
+        const tp = tablePt(e, pc.y), it = pc.it, base = it.gk === 'mh' ? { dx: 0, dz: 0, dr: 0 } : (getOvr(it.gk) || { dx: 0, dz: 0, dr: 0 });
+        cdrag = { it, mine: it.gk === 'mh', c: it.id, sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, p0: tp || { x: 0, z: 0 }, base };
         e.preventDefault(); return;
       }
-      const ps = ray.intersectObjects(plates, false);
+      setRay(e); const ps = ray.intersectObjects(plates, false);
       if (ps.length) { const i = ps[0].object.userData.seat; if (!api.seats[i] && !api.inGame() && api.me < 0 && api.uid) { api.sit(i); return; } }
-      orbit = { sx: e.clientX, sy: e.clientY, az: goal.az, pol: goal.pol, moved: false, pt };
+      orbit = { sx: e.clientX, sy: e.clientY, az: goal.az, pol: goal.pol, moved: false, pt: boardPt(e) };
     });
     canvas.addEventListener('pointermove', e => {
       if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pinch && pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); goal.dist = Math.min(3800, Math.max(260, pinch.dist * pinch.d / Math.max(20, d))); return; }
+      if (pinch && pointers.size === 2) {
+        const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        goal.dist = Math.min(3800, Math.max(260, pinch.dist * pinch.d / Math.max(20, d)));
+        const sc = goal.dist * .0014, ca = Math.cos(goal.az), sa = Math.sin(goal.az);
+        goal.tx = pinch.tx - ca * (mx - pinch.mx) * sc + (-sa) * (my - pinch.my) * sc; goal.tz = pinch.tz + sa * (mx - pinch.mx) * sc + (-ca) * (my - pinch.my) * sc;
+        return;
+      }
       if (ui.drag && ui.drag.id === e.pointerId) {
         if (!ui.drag.moved && Math.hypot(e.clientX - ui.drag.sx, e.clientY - ui.drag.sy) > 5) ui.drag.moved = true;
         if (ui.drag.moved) { const pt = boardPt(e); if (pt) { ui.drag.x = pt.x; ui.drag.y = pt.y; api.renderPegs(); } }
+      } else if (cdrag && cdrag.id === e.pointerId) {
+        if (!cdrag.moved && Math.hypot(e.clientX - cdrag.sx, e.clientY - cdrag.sy) > 5) { cdrag.moved = true; S.slide(.6); }
+        if (cdrag.moved) {
+          const tp = tablePt(e, 2); if (!tp) return;
+          const dx = tp.x - cdrag.p0.x, dz = tp.z - cdrag.p0.z;
+          if (cdrag.mine) mineDrag = { c: cdrag.c, x: cdrag.it.tx0 !== undefined ? cdrag.it.tx0 + dx : tp.x, z: cdrag.it.tz0 !== undefined ? cdrag.it.tz0 + dz : tp.z };
+          else sendOvr(cdrag.it.gk, { dx: cdrag.base.dx + dx, dz: cdrag.base.dz + dz, dr: cdrag.base.dr || 0, flip: !!cdrag.base.flip, r: rTag(cdrag.it.gk), by: api.uid });
+          sync();
+        }
       } else if (orbit) {
         const dx = e.clientX - orbit.sx, dy = e.clientY - orbit.sy;
         if (!orbit.moved && Math.hypot(dx, dy) > 5) orbit.moved = true;
-        if (orbit.moved) { goal.az = Math.max(-1.3, Math.min(1.3, orbit.az - dx * .006)); goal.pol = Math.max(.05, Math.min(1.35, orbit.pol - dy * .005)); }
+        if (orbit.pan) {
+          const sc = goal.dist * .0014, ca = Math.cos(goal.az), sa = Math.sin(goal.az);
+          goal.tx = orbit.tx - ca * dx * sc + (-sa) * dy * sc; goal.tz = orbit.tz + sa * dx * sc + (-ca) * dy * sc;
+        } else if (orbit.moved) { goal.az = orbit.az - dx * .006; goal.pol = Math.max(.05, Math.min(1.5, orbit.pol - dy * .005)); }
+      } else if (e.pointerType === 'mouse' && !e.buttons) {
+        const pc = pickCard(e); const h = pc ? pc.it : null;
+        if (h !== hoverIt) { hoverIt = h; canvas.style.cursor = h ? 'grab' : ''; }
       }
     });
     function up(e, cancel) {
@@ -769,8 +956,32 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
         else if (!d.moved && !cancel) ui.pegSel = (ui.pegSel && ui.pegSel.s === d.s && ui.pegSel.w === d.w) ? null : { s: d.s, w: d.w };
         api.renderPegs(); return;
       }
+      const cd = cdrag;
+      if (cd && cd.id === e.pointerId) {
+        cdrag = null;
+        if (cancel) { mineDrag = null; sync(); return; }
+        if (cd.moved) {
+          S.place();
+          if (cd.mine) {
+            const md = mineDrag; mineDrag = null;
+            if (md && md.z < HAND_Z - 70) api.dropCard(cd.c);
+            sync();
+          } else {
+            const l = local.get(cd.it.gk); if (l) sendOvr(cd.it.gk, l, true);
+            sync();
+          }
+        } else if (cd.mine) { api.actCard(cd.c); }
+        else {
+          const now = Date.now();
+          if (lastTap.k === cd.it.gk && now - lastTap.t < 380 && cd.it.id >= 0) {          // double-tap: turn the card over
+            const b = cd.base; S.flip();
+            sendOvr(cd.it.gk, { dx: b.dx, dz: b.dz, dr: b.dr || 0, flip: !b.flip, r: rTag(cd.it.gk), by: api.uid }, true); lastTap = { k: '', t: 0 }; sync();
+          } else lastTap = { k: cd.it.gk, t: now };
+        }
+        return;
+      }
       if (orbit && !cancel) {
-        if (!orbit.moved && ui.pegSel && orbit.pt) { const p = api.nearest(ui.pegSel.s, orbit.pt.x, orbit.pt.y); if (p != null) { api.movePeg(ui.pegSel.s, ui.pegSel.w, p); ui.pegSel = null; api.renderPegs(); } }
+        if (!orbit.moved && !orbit.pan && ui.pegSel && orbit.pt) { const p = api.nearest(ui.pegSel.s, orbit.pt.x, orbit.pt.y); if (p != null) { api.movePeg(ui.pegSel.s, ui.pegSel.w, p); ui.pegSel = null; api.renderPegs(); } }
       }
       orbit = null;
     }
@@ -789,12 +1000,18 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
       if (!active) return;
       raf = requestAnimationFrame(frame);
       const dt = Math.min(.05, (t - last) / 1000 || .016); last = t; tClock += dt;
-      const ki = 1 - Math.exp(-dt * 11), kc = 1 - Math.exp(-dt * 8), kp = 1 - Math.exp(-dt * 22);
+      const ki = 1 - Math.exp(-dt * 11), kc = 1 - Math.exp(-dt * 8), kp = 1 - Math.exp(-dt * 22), k60 = dt * 60;
       for (const k of ['az', 'pol', 'dist', 'tx', 'ty', 'tz']) cam[k] += (goal[k] - cam[k]) * kc;
       setCam();
       items.forEach(it => {
-        const g = it.grp; g.position.x += (it.tx - g.position.x) * ki; g.position.y += (it.ty - g.position.y) * ki; g.position.z += (it.tz - g.position.z) * ki;
+        const g = it.obj, dragging = cdrag && cdrag.moved && (cdrag.mine ? cdrag.c === it.id && it.gk === 'mh' : cdrag.it.gk === it.gk);
+        const ty = it.ty + (dragging ? 24 : 0) + (hoverIt === it && !dragging ? 6 : 0);
+        g.position.x += (it.tx - g.position.x) * ki; g.position.z += (it.tz - g.position.z) * ki;
+        it.vy += (ty - g.position.y) * .14 * k60; it.vy *= Math.pow(.74, k60); g.position.y += it.vy * k60;
         g.rotation.y += ang(g.rotation.y, it.tyaw) * ki;
+        const vx = (g.position.x - it.px) / Math.max(dt, .001), vz = (g.position.z - it.pz) / Math.max(dt, .001); it.px = g.position.x; it.pz = g.position.z;
+        const lz = Math.max(-.4, Math.min(.4, -vx * .0011)), lx = Math.max(-.4, Math.min(.4, vz * .0011));
+        g.rotation.z += (lz - g.rotation.z) * .2; g.rotation.x += (lx - g.rotation.x) * .2;
       });
       pegObjs.forEach(m => { if (!m.visible) return; if (m.userData.snap) m.position.copy(m.userData.t); else m.position.lerp(m.userData.t, kp); });
       const sel = ui.pegSel && pegOf[ui.pegSel.s + ':' + ui.pegSel.w];
@@ -807,10 +1024,10 @@ window.CRIB_BOARD.img="data:image/webp;base64,UklGRtKQBQBXRUJQVlA4WAoAAAAQAAAAxg
     }
     const ro = new ResizeObserver(() => { resize(); });
     ro.observe(host);
-    function resume() { if (active) return; active = true; resize(); Object.assign(goal, VIEWS.reset()); Object.assign(cam, goal); sync(); last = performance.now(); raf = requestAnimationFrame(frame); }
+    function resume() { if (active) return; active = true; resumeAt = performance.now(); resize(); Object.assign(goal, VIEWS.reset()); Object.assign(cam, goal); sync(); last = performance.now(); raf = requestAnimationFrame(frame); }
     function pause() { active = false; cancelAnimationFrame(raf); }
     function destroy() { pause(); ro.disconnect(); renderer.dispose(); canvas.remove(); bar.remove(); }
-    return { resume, pause, all: sync, pegs: syncPegs, destroy, view: goView, get active() { return active; }, _scene: scene, _camera: camera, _cam: cam };
+    return { _items: items, resume, pause, all: sync, pegs: syncPegs, destroy, view: goView, get active() { return active; }, _scene: scene, _camera: camera, _cam: cam };
   }
   window.CribTable3D = { create };
 })();
@@ -892,6 +1109,8 @@ function createApp(root, claude) {
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
 
   let t3 = null;
+  const S = window.CribSFX || new Proxy({}, { get: () => () => { } });
+  let objs = {}, music = null, objRef = null, musicRef = null, lastObjT = Date.now(), shownMusic = '';
   let db = null, user = null, uid = null, canWrite = true, myName = lsGet('crib.name') || '';
   let gameRef = null, seatRef = [], pegRef = [], discRef = [];
   let G = E.fresh(0), seats = Array(NSEATS).fill(null), pegs = Array(NSEATS).fill(null), discs = Array(NSEATS).fill(null);
@@ -906,6 +1125,7 @@ function createApp(root, claude) {
       <h1>Crib 21·10</h1>
       <div class="top-r">
         <span class="chip" data-r="conn"><i></i><span>Connecting…</span></span>
+        <button class="btn small" type="button" data-act="mute" data-r="mutebtn">Sound on</button>
         <button class="btn small" type="button" data-act="view" data-r="viewbtn" hidden>2D view</button>
         <label class="nm">Your name <input data-r="name" maxlength="14" autocomplete="off" placeholder="Name"></label>
       </div>
@@ -923,12 +1143,21 @@ function createApp(root, claude) {
       <div class="g-right" data-r="slotR"></div>
       <div class="g-me" data-r="me"></div>
     </div>
+    <div class="music" data-r="music">
+      <div class="mrow"><b>Table music</b>
+        <input data-r="murl" placeholder="Paste a Spotify song / playlist link" autocomplete="off">
+        <button class="btn small primary" type="button" data-act="mplay">Play for everyone</button>
+        <button class="btn small" type="button" data-act="mstop">Stop</button></div>
+      <div class="mnote" data-r="mnote">Everyone sees the same player. Each person hears it through their own Spotify (Premium plays full songs; free accounts get previews).</div>
+      <div class="mplayer" data-r="mplayer"></div>
+    </div>
     <details class="help"><summary>How it works</summary>
       <ul>
         <li>Pick a seat, then anyone seated hits <b>Deal</b>. The deck shuffles itself every round.</li>
         <li>Five players: the dealer gets 4 cards, everyone else gets 5 and sends 1 to the dealer's crib.</li>
         <li>The table tells you whose turn it is, plays Go and 31 for you, and adds up every point.</li>
-        <li>Pegs are all by hand: <b>drag</b> a peg, or <b>tap</b> a peg then tap a hole. Your seat shows where the front peg should be.</li>
+        <li>Pegs are all by hand: <b>drag</b> a peg, or <b>tap</b> a peg then tap a hole. A hole can only hold one peg.</li>
+        <li>3D table: drag empty space to spin around the table, right-drag or two fingers to pan, scroll or pinch to zoom. Drag any card or the deck around, double-tap a face-up card to turn it. Drag your own card up onto the table to play or discard it.</li>
       </ul>
       <div class="tools" data-r="tools"></div>
     </details>
@@ -997,8 +1226,8 @@ function createApp(root, claude) {
     if (p == null) return;
     const cur = clone(pegPos(s));
     const other = w === 'a' ? 'b' : 'a';
-    if (p === cur[other] && p < 121 && p > 0) { flash('Both pegs can\'t share a hole'); return; }
-    cur[w] = p;
+    if (p === cur[other]) { flash('That hole already has your other peg'); S.deny(); return; }
+    cur[w] = p; S.pegDrop();
     pegs[s] = cur;
     renderPegs(); renderSeats();
     queueWrite('peg' + s, () => pegRef[s].set({ a: cur.a, b: cur.b }));
@@ -1118,6 +1347,7 @@ function createApp(root, claude) {
     } else {
       R.me.innerHTML = `<div class="mepanel">${seatHTML(0, false)}<div class="handwrap"><div class="note">${uid ? 'You\'re watching. Sit in an open seat to play.' : 'Sign in to join the table.'}</div></div></div>`;
     }
+    if (t3) t3.all();
   }
 
   function myHandHTML(me) {
@@ -1246,6 +1476,7 @@ function createApp(root, claude) {
     if (n.n === ui.lastNotice) return;
     ui.lastNotice = n.n;
     const el = document.createElement('div');
+    S.score(n.pts);
     el.className = 'pop'; el.style.setProperty('--c', COL[n.seat]);
     el.innerHTML = `<b>+${n.pts}</b>${esc(nameOf(n.seat))} · ${esc(n.why)}<div class="prev" style="margin-top:4px">Now on ${n.total}. Peg to ${Math.min(n.total, 121)}.</div>`;
     root.querySelectorAll('.pop').forEach(x => x.remove());
@@ -1253,6 +1484,8 @@ function createApp(root, claude) {
     setTimeout(() => el.remove(), 3200);
   }
   function ping() {
+    S.chime();
+    return;
     try {
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
       const a = new AC(), o = a.createOscillator(), g = a.createGain();
@@ -1363,6 +1596,9 @@ function createApp(root, claude) {
       case 'cut': commit(S => { if (S.phase !== 'cut') return false; E.cut(S); return true; }); break;
       case 'next': commit(S => { if (S.phase !== 'count') return false; E.nextCount(S); return true; }); break;
       case 'askLobby': ui.confirm = 'lobby'; renderTools(); break;
+      case 'mute': { const m = S.toggle(); R.mutebtn.textContent = m ? 'Sound off' : 'Sound on'; break; }
+      case 'mplay': { const p = parseSpotify(R.murl.value); if (!p) { flash('Paste a Spotify link (open.spotify.com/...)'); break; } if (musicRef) queueWrite('music', () => musicRef.set({ type: p.type, id: p.id, by: myName || 'Someone', at: Date.now() })); R.murl.value = ''; break; }
+      case 'mstop': { if (musicRef) queueWrite('music', () => musicRef.delete()); break; }
       case 'view': setView(!appEl.classList.contains('m3d')); break;
       case 'lobby': ui.confirm = null; commit(S => { E.toLobby(S); return true; }).then(resetPegs); break;
     }
@@ -1382,13 +1618,15 @@ function createApp(root, claude) {
   }
   function onState() {
     // round change -> shuffle animation, clear selections
-    if (G.round !== ui.lastRound) { if (ui.loaded) ui.shuffleAt = Date.now(); ui.lastRound = G.round; ui.sel = []; setTimeout(renderZones, 1250); }
+    if (G.round !== ui.lastRound) { if (ui.loaded) { ui.shuffleAt = Date.now(); S.shuffle(); } ui.lastRound = G.round; ui.sel = []; setTimeout(renderZones, 1250); }
     const me = mySeat();
     const mineNow = me >= 0 && inGame() && (actor() === me && G.phase !== 'over' && G.phase !== 'count' || (G.phase === 'discard' && G.order.includes(me) && E.need(G, me) > 0 && !discOk(me)));
     if (ui.loaded && mineNow && !ui.lastTurnMine) ping();
     ui.lastTurnMine = mineNow;
     if (G.phase !== 'play' && G.phase !== 'discard') ui.sel = [];
     if (G.phase === 'play') ui.sel = ui.sel.filter(c => G.play.hands[me] && G.play.hands[me].includes(c));
+    if (ui.loaded && G.phase === 'over' && ui.lastPhase !== 'over') S.win();
+    ui.lastPhase = G.phase;
     popNotice();
     renderAll();
     checkDiscards();
@@ -1406,22 +1644,66 @@ function createApp(root, claude) {
     if (!myName) {
       try { const ps = await user.profiles([uid]); const nm = ps && ps[uid] && ps[uid].name; if (nm) { myName = nm.split(' ')[0].slice(0, 14); R.name.value = myName; } } catch (e) { }
     }
-    gameRef = db.doc('crib/game');
+    gameRef = db.doc('crib/game'); objRef = db.doc('crib/obj'); musicRef = db.doc('crib/music');
     for (let i = 0; i < NSEATS; i++) { seatRef[i] = db.doc('crib/seat' + i); pegRef[i] = db.doc('crib/peg' + i); discRef[i] = db.doc('crib/disc' + i); }
     const errH = tag => err => { setConn('Sync lost (' + tag + ')', true); };
     unsubs.push(gameRef.onSnapshot(s => { setConn('Live'); G = s.exists ? clone(s.data()) : E.fresh(0); if (!G.order) G = E.fresh(0); onState(); }, errH('game')));
+    unsubs.push(objRef.onSnapshot(s => {
+      objs = s.exists ? clone(s.data()) : {};
+      let newest = lastObjT; Object.keys(objs).forEach(k => { const e = objs[k]; if (e && e.t > lastObjT) { if (e.end && e.by !== uid) S.place(); if (e.t > newest) newest = e.t; } }); lastObjT = newest;
+      if (t3) t3.all();
+    }, errH('obj')));
+    unsubs.push(musicRef.onSnapshot(s => { music = s.exists ? clone(s.data()) : null; R.mnote.textContent = music && music.by ? music.by + ' put on a song. Press play on the player below.' : 'Everyone sees the same player. Each person hears it through their own Spotify (Premium plays full songs; free accounts get previews).'; renderMusic(); }, errH('music')));
     for (let i = 0; i < NSEATS; i++) {
       unsubs.push(seatRef[i].onSnapshot(s => { seats[i] = s.exists && s.data().uid ? clone(s.data()) : null; if (ui.loaded) { renderAll(); } }, errH('seat')));
       unsubs.push(pegRef[i].onSnapshot(s => { if (ui.drag && ui.drag.s === i) return; pegs[i] = s.exists ? clone(s.data()) : null; if (ui.loaded) { renderPegs(); renderSeats(); } }, errH('peg')));
       unsubs.push(discRef[i].onSnapshot(s => { discs[i] = s.exists ? clone(s.data()) : null; if (ui.loaded) { renderAll(); checkDiscards(); } }, errH('disc')));
     }
   }
+  function myCards() {
+    const me = mySeat(), out = { cards: [], sel: ui.sel, legal: () => false };
+    if (me < 0 || !inGame() || !G.order.includes(me)) return out;
+    let cards = [], mode = 'none';
+    if (G.phase === 'discard') { const d = discOk(me) ? discs[me].cards : []; cards = G.hands[me].filter(c => !d.includes(c)); mode = 'discard'; }
+    else if (G.phase === 'cut' || G.phase === 'count' || G.phase === 'over') cards = G.kept[me] || [];
+    else if (G.phase === 'play') { cards = G.play.hands[me]; mode = 'play'; }
+    const myTurn = G.phase === 'play' && G.play.turn === me, need = G.phase === 'discard' ? E.need(G, me) : 0;
+    const canDisc = mode === 'discard' && need > 0 && !discOk(me);
+    out.cards = sortCards(cards || []);
+    out.legal = c => canDisc || (mode === 'play' && myTurn && E.canPlay(G, me, c));
+    return out;
+  }
+  function dropCard(c) {
+    const me = mySeat();
+    if (G.phase === 'discard') {
+      const need = E.need(G, me); if (need < 1 || discOk(me)) { flash('Nothing to discard right now'); return; }
+      if (!ui.sel.includes(c)) { ui.sel.push(c); if (ui.sel.length > need) ui.sel.shift(); }
+      renderSeats(); if (ui.sel.length === need) actDiscard();
+    } else if (G.phase === 'play' && G.play.turn === me && E.canPlay(G, me, c)) { ui.sel = [c]; actPlay(); }
+    else { flash(G.phase === 'play' ? (G.play.turn === me ? 'That card would go over 31' : 'Not your turn') : 'Can\'t play a card now'); S.deny(); }
+  }
+  function sendObj(gk, entry) { if (!objRef) return; queueWrite('obj', () => objRef.update({ [gk]: entry })).catch(() => { }); }
+
+  /* ---------- music ---------- */
+  function parseSpotify(u) {
+    u = String(u || '').trim();
+    const m = u.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|album|playlist|episode|show|artist)\/([A-Za-z0-9]{10,32})/) || u.match(/^spotify:(track|album|playlist|episode|show|artist):([A-Za-z0-9]{10,32})$/);
+    return m ? { type: m[1], id: m[2] } : null;
+  }
+  function renderMusic() {
+    const key = music && music.type ? music.type + '/' + music.id : '';
+    if (key === shownMusic) return; shownMusic = key;
+    if (!key) { R.mplayer.innerHTML = ''; return; }
+    const h = (music.type === 'track' || music.type === 'episode') ? 152 : 352;
+    R.mplayer.innerHTML = '<iframe title="Spotify" style="border:0;border-radius:12px;width:100%;height:' + h + 'px" src="https://open.spotify.com/embed/' + music.type + '/' + music.id + '?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>';
+  }
+
   /* ---------- 2D / 3D view ---------- */
   const appEl = root.querySelector('.app');
   const api3 = {
     B, COL, E, ui, pxy, pegAt, nearest, movePeg, renderPegs, pegPos, frontPeg, activeSeats, handCount, actor, discOk, inGame,
     get G() { return G; }, get seats() { return seats; }, get me() { return mySeat(); }, get uid() { return uid; },
-    sit: i => claimSeat(i)
+    sit: i => claimSeat(i), myCards, dropCard, actCard, sendObj, objs: () => objs
   };
   function setView(m3) {
     if (m3 && !t3 && window.CribTable3D) t3 = window.CribTable3D.create(R.stage, api3);
@@ -1431,6 +1713,7 @@ function createApp(root, claude) {
     if (t3) { if (m3) t3.resume(); else t3.pause(); }
     lsSet('crib.view', m3 ? '3d' : '2d');
   }
+  R.mutebtn.textContent = S.muted ? 'Sound off' : 'Sound on';
   if (window.CribTable3D && window.THREE) { R.viewbtn.hidden = false; if (lsGet('crib.view') !== '2d') setView(true); else R.viewbtn.textContent = '3D view'; }
   init();
 

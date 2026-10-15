@@ -4,7 +4,7 @@ const { WebSocketServer } = require('ws');
 const PORT = +process.env.PORT || 3000;
 const PUB = fs.existsSync(path.join(__dirname, 'public', 'index.html')) ? path.join(__dirname, 'public') : __dirname; // flat repo layout: index.html next to server.js
 const DATA = process.env.DATA_FILE || path.join(__dirname, 'data.json');
-const PATH_OK = /^crib\/(game|seat[0-4]|peg[0-4]|disc[0-4])$/;
+const PATH_OK = /^crib\/(game|seat[0-4]|peg[0-4]|disc[0-4]|obj|music)$/;
 const MAX_DOC = 64 * 1024;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webp': 'image/webp', '.ico': 'image/x-icon' };
 
@@ -53,8 +53,14 @@ wss.on('connection', ws => {
     if (!PATH_OK.test(p)) return ack({ ok: false, code: 'invalid_argument' });
     if (m.t === 'set' || m.t === 'update') {
       if (!m.data || typeof m.data !== 'object' || Array.isArray(m.data) || JSON.stringify(m.data).length > MAX_DOC) return ack({ ok: false, code: 'invalid_argument' });
-      if (m.t === 'update') { if (!r.docs.has(p)) return ack({ ok: false, code: 'invalid_argument' }); r.docs.set(p, Object.assign({}, r.docs.get(p), m.data)); }
-      else r.docs.set(p, m.data);
+      if (/^crib\/peg/.test(p) && m.t === 'set' && m.data.a === m.data.b) return ack({ ok: false, code: 'invalid_argument' }); // one peg per hole
+      if (p === 'crib/music') { const d = m.data; if (typeof d.id !== 'string' || !/^[A-Za-z0-9]{10,32}$/.test(d.id) || !/^(track|album|playlist|episode|show|artist)$/.test(d.type)) return ack({ ok: false, code: 'invalid_argument' }); m.data = { type: d.type, id: d.id, by: String(d.by || '').slice(0, 20), at: +d.at || Date.now() }; }
+      if (m.t === 'update') {
+        if (!r.docs.has(p) && p !== 'crib/obj') return ack({ ok: false, code: 'invalid_argument' });
+        const merged = Object.assign({}, r.docs.get(p) || {}, m.data);
+        if (p === 'crib/obj') { const ks = Object.keys(merged); if (ks.length > 200) ks.sort((a, b) => (merged[a].t || 0) - (merged[b].t || 0)).slice(0, ks.length - 120).forEach(k => delete merged[k]); }
+        r.docs.set(p, merged);
+      } else r.docs.set(p, m.data);
       broadcast(r, p); saveSoon(); return ack({ ok: true });
     }
     if (m.t === 'delete') { r.docs.delete(p); broadcast(r, p); saveSoon(); return ack({ ok: true }); }
