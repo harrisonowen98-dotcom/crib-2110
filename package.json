@@ -1,0 +1,10 @@
+{
+  "name": "crib-2110",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Crib 21-10 multiplayer table: static page + WebSocket sync",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}
