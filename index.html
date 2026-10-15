@@ -290,6 +290,17 @@ body:has(.app.m3d) #app { max-width: none; }
 .app.m3d .acts:empty { display: none; }
 .app.m3d .handwrap > .note { pointer-events: auto; padding: 8px 16px; border-radius: 99px; background: rgba(10, 16, 14, .78); border: 1px solid var(--line); }
 .app.m3d .stage3d { margin-bottom: 4px; }
+.cutui { display: grid; gap: 4px; min-width: min(420px, 78vw); }
+.cutrow { display: flex; align-items: center; gap: 12px; }
+.cuth { font-weight: 700; white-space: nowrap; }
+.cutval { min-width: 7.5em; text-align: right; font-variant-numeric: tabular-nums; color: var(--accent); font-size: 14px; }
+.cutsub { font-size: 12px; color: var(--muted); text-align: left; }
+.cutslider { -webkit-appearance: none; appearance: none; flex: 1; min-width: 120px; height: 28px; background: transparent; touch-action: pan-y; cursor: pointer; }
+.cutslider::-webkit-slider-runnable-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, #7d1f2e, #b0344a); border: 1px solid var(--line); }
+.cutslider::-moz-range-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, #7d1f2e, #b0344a); }
+.cutslider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 34px; margin-top: -14px; border-radius: 5px; background: #f5f1e8; border: 2px solid var(--accent); box-shadow: 0 3px 10px rgba(0, 0, 0, .5); }
+.cutslider::-moz-range-thumb { width: 22px; height: 30px; border-radius: 5px; background: #f5f1e8; border: 2px solid var(--accent); }
+.app.m3d .acts:has(.cutui) { border-radius: 22px; }
 
 </style></head><body>
 <div id="app"></div>
@@ -305,9 +316,34 @@ body:has(.app.m3d) #app { max-width: none; }
   E.name = c => E.RANKS[E.rank(c)] + E.SUITS[E.suit(c)];
   E.rng = n => { const a = new Uint32Array(1); (root.crypto || globalThis.crypto).getRandomValues(a); return a[0] % n; };
   E.shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = E.rng(i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  /* real riffle shuffle (Gilbert-Shannon-Reeds): cut the pack near the middle, then drop cards from either half in proportion to its size */
+  E.riffle = (arr, times) => {
+    let a = arr.slice();
+    for (let t = 0; t < (times || 7); t++) {
+      let k = 0; for (let i = 0; i < a.length; i++) if (E.rng(2)) k++;
+      let L = a.slice(0, k), R = a.slice(k), out = [];
+      while (L.length || R.length) {
+        if (E.rng(L.length + R.length) < L.length) out.push(L.shift()); else out.push(R.shift());
+      }
+      a = out;
+    }
+    return a;
+  };
+  E.ordered = () => Array.from({ length: 52 }, (_, i) => i);
+  /* scoop every card back up (hands, played cards, crib, starter, rest of the deck) in table order, then riffle */
+  E.collect = S => {
+    const seen = new Set(), pile = [];
+    const add = c => { if (c >= 0 && c < 52 && !seen.has(c)) { seen.add(c); pile.push(c); } };
+    (S.order || []).forEach(s => { (S.kept && S.kept[s] || []).forEach(add); (S.hands && S.hands[s] || []).forEach(add); });
+    (S.play && S.play.done || []).forEach(c => add(c.c != null ? c.c : c));
+    (S.play && S.play.run || []).forEach(x => add(x.c));
+    (S.crib || []).forEach(add); add(S.starter); (S.deck || []).forEach(add);
+    E.ordered().forEach(add); // safety: never lose a card
+    return pile;
+  };
   E.nextOf = (order, s) => order[(order.indexOf(s) + 1) % order.length];
 
-  E.fresh = rev => ({ rev: rev || 0, phase: 'lobby', round: 0, order: [], names: {}, dealer: -1, hands: {}, kept: {}, crib: [], starter: -1, deck: [], play: null, cnt: null, scores: {}, notice: null, log: [], winner: -1 });
+  E.fresh = rev => ({ rev: rev || 0, phase: 'lobby', round: 0, order: [], names: {}, dealer: -1, hands: {}, kept: {}, crib: [], starter: -1, deck: [], pack: [], shuffles: 0, play: null, cnt: null, scores: {}, notice: null, log: [], winner: -1 });
 
   E.log = (S, msg) => { S.log.push(msg); if (S.log.length > 40) S.log.splice(0, S.log.length - 40); };
 
@@ -325,7 +361,7 @@ body:has(.app.m3d) #app { max-width: none; }
   /* ---- dealing ---- */
   E.deal = S => {
     const n = S.order.length;
-    const deck = E.shuffle(Array.from({ length: 52 }, (_, i) => i));
+    const deck = (S.pack && S.pack.length === 52) ? S.pack.slice() : E.riffle(E.ordered());
     const hands = {};
     const per = n === 2 ? 6 : 5;
     // five players: the dealer is dealt four cards and sits out the discard
@@ -335,7 +371,7 @@ body:has(.app.m3d) #app { max-width: none; }
     const maxc = Math.max(...Object.values(counts));
     for (let r = 0; r < maxc; r++) S.order.forEach(s => { if (hands[s].length < counts[s]) hands[s].push(deck.pop()); });
     S.crib = n === 3 ? [deck.pop()] : [];
-    S.hands = hands; S.kept = {}; S.deck = deck; S.starter = -1; S.play = null; S.cnt = null;
+    S.pack = []; S.hands = hands; S.kept = {}; S.deck = deck; S.starter = -1; S.play = null; S.cnt = null;
     S.round += 1; S.phase = 'discard';
     E.log(S, `Round ${S.round}: ${S.names[S.dealer]} deals.`);
   };
@@ -344,7 +380,7 @@ body:has(.app.m3d) #app { max-width: none; }
   E.startGame = (S, order, names) => {
     S.order = order.slice().sort((a, b) => a - b);
     S.names = names; S.scores = {}; S.order.forEach(s => { S.scores[s] = 0; });
-    S.winner = -1; S.log = []; S.notice = null; S.round = 0;
+    S.winner = -1; S.log = []; S.notice = null; S.round = 0; S.pack = E.riffle(E.ordered()); S.shuffles = 1;
     S.dealer = S.order[E.rng(S.order.length)];
     E.log(S, `${S.names[S.dealer]} deals first.`);
     E.deal(S);
@@ -367,10 +403,13 @@ body:has(.app.m3d) #app { max-width: none; }
     return true;
   };
 
-  E.cut = S => {
+  /* k = how many cards are lifted off the top; the card now showing is the starter (chosen by the cutter, or random if k is omitted) */
+  E.cut = (S, k) => {
     if (S.phase !== 'cut') return;
-    const i = E.rng(S.deck.length);
-    const c = S.deck.splice(i, 1)[0];
+    const n = S.deck.length;
+    let i = Number.isInteger(k) ? Math.max(0, Math.min(n - 1, k)) : E.rng(n);
+    S.deck = S.deck.slice(i).concat(S.deck.slice(0, i));
+    const c = S.deck.shift();
     S.starter = c;
     E.log(S, `Starter card: ${E.name(c)}`);
     if (E.rank(c) === 10) E.award(S, S.dealer, 2, 'His heels (jack cut)');
@@ -505,7 +544,12 @@ body:has(.app.m3d) #app { max-width: none; }
     if (S.phase !== 'count') return;
     const C = S.cnt;
     if (C.idx < C.steps.length - 1) { C.idx++; E.applyStep(S, C.idx); }
-    else { S.dealer = E.nextOf(S.order, S.dealer); E.deal(S); }
+    else {
+      S.dealer = E.nextOf(S.order, S.dealer);
+      S.pack = E.riffle(E.collect(S)); S.shuffles = (S.shuffles || 0) + 1;
+      E.log(S, 'All 52 cards gathered and riffle-shuffled');
+      E.deal(S);
+    }
   };
 
   E.toLobby = S => {
@@ -1402,7 +1446,10 @@ function createApp(root, claude) {
     } else if (G.phase === 'play') {
       acts = myTurn ? `<button class="btn primary" data-act="play" ${ui.sel.length === 1 ? '' : 'disabled'}>Play card</button><span class="note">Count is ${G.play.count}. Tap a card, then Play.</span>` : `<span class="note">Waiting on ${esc(nameOf(G.play.turn))}…</span>`;
     } else if (G.phase === 'cut') {
-      acts = `<span class="note">${esc(nameOf(actor()))} cuts the deck.</span>`;
+      if (actor() === me) {
+        const n = G.deck.length, k = Math.max(0, Math.min(n - 1, ui.cutK == null ? Math.floor(n / 2) : ui.cutK));
+        acts = `<div class="cutui"><div class="cutrow"><span class="cuth">Cut the deck</span><input class="cutslider" type="range" min="0" max="${n - 1}" value="${k}" aria-label="Where to cut the deck"><b class="cutval">${k === 0 ? 'Top' : k === n - 1 ? 'Bottom' : k + ' cards down'}</b></div><div class="cutsub">${n} cards left in the deck. Slide to pick exactly where you cut.</div></div><button class="btn primary" data-act="cut">Cut here</button>`;
+      } else acts = `<span class="note">${esc(nameOf(actor()))} cuts the deck.</span>`;
     }
     return `<div class="hand">${hand}</div><div class="acts">${acts}</div>`;
   }
@@ -1621,7 +1668,7 @@ function createApp(root, claude) {
       case 'card': actCard(+t.dataset.c); break;
       case 'discard': actDiscard(); break;
       case 'play': actPlay(); break;
-      case 'cut': commit(S => { if (S.phase !== 'cut') return false; E.cut(S); return true; }); break;
+      case 'cut': { const k = ui.cutK == null ? Math.floor(G.deck.length / 2) : ui.cutK; ui.cutK = null; commit(S => { if (S.phase !== 'cut') return false; E.cut(S, k); return true; }); break; }
       case 'next': commit(S => { if (S.phase !== 'count') return false; E.nextCount(S); return true; }); break;
       case 'askLobby': ui.confirm = 'lobby'; renderTools(); break;
       case 'mute': { const m = S.toggle(); R.mutebtn.textContent = m ? 'Sound off' : 'Sound on'; break; }
@@ -1630,6 +1677,11 @@ function createApp(root, claude) {
       case 'view': setView(!appEl.classList.contains('m3d')); break;
       case 'lobby': ui.confirm = null; commit(S => { E.toLobby(S); return true; }).then(resetPegs); break;
     }
+  });
+  root.addEventListener('input', e => {
+    const t = e.target; if (!t.classList || !t.classList.contains('cutslider')) return;
+    ui.cutK = +t.value; const n = G.deck.length, v = t.closest('.cutui').querySelector('.cutval');
+    v.textContent = ui.cutK === 0 ? 'Top' : ui.cutK === n - 1 ? 'Bottom' : ui.cutK + ' cards down'; S.slide && S.slide(.4);
   });
   root.addEventListener('keydown', e => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-act="card"]')) { e.preventDefault(); actCard(+e.target.dataset.c); }
@@ -1729,7 +1781,7 @@ function createApp(root, claude) {
   }
   function onState() {
     // round change -> shuffle animation, clear selections
-    if (G.round !== ui.lastRound) { if (ui.loaded) { ui.shuffleAt = Date.now(); S.shuffle(); } ui.lastRound = G.round; ui.sel = []; setTimeout(renderZones, 1250); }
+    if (G.round !== ui.lastRound) { if (ui.loaded) { ui.shuffleAt = Date.now(); S.shuffle(); } ui.lastRound = G.round; ui.sel = []; ui.cutK = null; setTimeout(renderZones, 1250); }
     const me = mySeat();
     const mineNow = me >= 0 && inGame() && (actor() === me && G.phase !== 'over' && G.phase !== 'count' || (G.phase === 'discard' && G.order.includes(me) && E.need(G, me) > 0 && !discOk(me)));
     if (ui.loaded && mineNow && !ui.lastTurnMine) ping();
