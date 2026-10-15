@@ -266,6 +266,30 @@ body { font: 15px/1.45 var(--font-body); letter-spacing: -.005em; background: ra
 button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .m3d .handwrap .hand { display: none; }
 .m3d .mepanel { align-items: center; }
+.botbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.botbar:empty { display: none; }
+.botbar .bl { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.botbar .chip .x { background: none; border: 0; color: var(--muted); font-size: 16px; line-height: 1; padding: 0 0 0 4px; }
+.botbar .chip .x:hover { color: var(--text); }
+
+/* ===== v6 full-screen table ===== */
+.app.m3d { --chrome: 118px; }
+body:has(.app.m3d) { padding-left: 10px; padding-right: 10px; padding-top: 8px; }
+body:has(.app.m3d) #app { max-width: none; }
+.app.m3d .top { padding: 0 2px 8px; }
+.app.m3d .banner { min-height: 44px; margin-bottom: 8px; padding: 6px 14px; }
+.app.m3d .felt { padding: 0; border: 0; background: none; box-shadow: none; border-radius: 0; gap: 10px; }
+.app.m3d .stage3d { height: max(440px, calc(100vh - var(--chrome) - 14px)); border-radius: 20px; background: #0c1a13; }
+.app.m3d .g-center { gap: 10px; }
+@media (max-width: 700px) { .app.m3d { --chrome: 150px; } }
+.app.m3d .g-me { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(14px, env(safe-area-inset-bottom, 0px)); z-index: 15; width: max-content; max-width: calc(100vw - 24px); pointer-events: none; }
+.app.m3d .mepanel { display: block; }
+.app.m3d .mepanel .seat { display: none; }
+.app.m3d .handwrap { gap: 0; }
+.app.m3d .acts { pointer-events: auto; padding: 8px 12px; border-radius: 99px; background: rgba(10, 16, 14, .78); backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0, 0, 0, .5); align-items: center; }
+.app.m3d .acts:empty { display: none; }
+.app.m3d .handwrap > .note { pointer-events: auto; padding: 8px 16px; border-radius: 99px; background: rgba(10, 16, 14, .78); border: 1px solid var(--line); }
+.app.m3d .stage3d { margin-bottom: 4px; }
 
 </style></head><body>
 <div id="app"></div>
@@ -597,7 +621,7 @@ window.CribSFX = (function () {
     const canvas = renderer.domElement;
     host.insertBefore(canvas, host.firstChild);
     const scene = new T.Scene();
-    scene.background = new T.Color(0x0a120e);
+    scene.background = new T.Color(0x0c1a13);
     const camera = new T.PerspectiveCamera(38, 1.6, 20, 7000);
     const aniso = renderer.capabilities.getMaxAnisotropy();
     const colTex = t => { t.encoding = T.sRGBEncoding; t.anisotropy = aniso; return t; };
@@ -1131,6 +1155,7 @@ function createApp(root, claude) {
       </div>
     </div>
     <div class="banner" data-r="banner"></div>
+    <div class="botbar" data-r="botbar"></div>
     <div class="felt">
       <div class="g-top" data-r="slotsTop"></div>
       <div class="g-left" data-r="slotL"></div>
@@ -1325,10 +1350,10 @@ function createApp(root, claude) {
       const target = Math.min(score, 121), f = frontPeg(i);
       hint = f === target ? `<span class="peghint ok">peg ✓</span>` : `<span class="peghint">peg to ${target}</span>`;
     }
-    const takeover = (!isMe && me < 0 && uid && sd.uid !== uid && inGame())
+    const takeover = (!isMe && !sd.bot && me < 0 && uid && sd.uid !== uid && inGame())
       ? (ui.confirm === 'take' + i ? `<div class="confirm"><span>Take ${esc(sd.name)}'s seat?</span><button class="btn small primary" data-act="takeover" data-i="${i}">Yes</button><button class="btn small ghost" data-act="cancel">No</button></div>` : `<button class="btn small ghost" data-act="askTake" data-i="${i}" style="margin-top:6px">Take over</button>`) : '';
     return `<div class="seat${turn ? ' turn' : ''}" style="--c:${COL[i]}">
-      <div class="who"><span class="dot"></span><span class="nmx">${esc(sd.name || 'Player')}</span>${isMe ? '<span class="tag">You</span>' : ''}${inPlay && G.dealer === i ? '<span class="tag d">Dealer</span>' : ''}</div>
+      <div class="who"><span class="dot"></span><span class="nmx">${esc(sd.name || 'Player')}</span>${isMe ? '<span class="tag">You</span>' : ''}${sd.bot ? '<span class="tag">Bot</span>' : ''}${inPlay && G.dealer === i ? '<span class="tag d">Dealer</span>' : ''}</div>
       ${inGame() && inPlay ? `<div class="score"><span class="n">${score}</span><span class="of">/ 121</span>${hint}</div>` : ''}
       ${inPlay && !isMe && ['discard', 'cut', 'play'].includes(G.phase) ? `<div class="backs">${backs(handCount(i))}</div>` : ''}
       ${takeover}
@@ -1496,8 +1521,9 @@ function createApp(root, claude) {
   }
 
   function renderAll() {
-    renderBanner(); renderSeats(); renderZones(); renderPegs(); renderTools();
+    renderBanner(); renderSeats(); renderZones(); renderPegs(); renderTools(); renderBots();
     if (t3) t3.all();
+    botTick();
   }
 
   /* ---------- game actions ---------- */
@@ -1590,6 +1616,8 @@ function createApp(root, claude) {
       case 'takeover': ui.confirm = null; claimSeat(+t.dataset.i, true); break;
       case 'cancel': ui.confirm = null; renderSeats(); renderTools(); break;
       case 'start': actStart(); break;
+      case 'addbot': addBot(); break;
+      case 'rmbot': freeSeat(+t.dataset.i); break;
       case 'card': actCard(+t.dataset.c); break;
       case 'discard': actDiscard(); break;
       case 'play': actPlay(); break;
@@ -1611,6 +1639,89 @@ function createApp(root, claude) {
     const me = mySeat();
     if (me >= 0 && myName) queueWrite('seat' + me, () => seatRef[me].update({ name: myName }));
   });
+
+
+  /* ---------- bots ---------- */
+  const BOT_NAMES = ['Ada', 'Maple', 'Gus', 'Rusty', 'Pip'];
+  const isBot = s => !!(seats[s] && seats[s].bot);
+  const driverSeat = () => seats.findIndex(x => x && x.uid && !x.bot);
+  const isDriver = () => { const me = mySeat(); return me >= 0 && me === driverSeat() && canWrite; };
+  function renderBots() {
+    const me = mySeat(), free = seats.findIndex(x => !x);
+    const bots = seats.map((x, i) => x && x.bot ? i : -1).filter(i => i >= 0);
+    if (!uid || inGame() || (me < 0 && !bots.length)) { R.botbar.innerHTML = ''; return; }
+    R.botbar.innerHTML = `<span class="bl">Computer players</span>${bots.map(i => `<span class="chip"><i style="background:${COL[i]}"></i>${esc(seats[i].name)}<button class="x" data-act="rmbot" data-i="${i}" aria-label="Remove ${esc(seats[i].name)}">&times;</button></span>`).join('')}${me >= 0 && free >= 0 ? '<button class="btn small" data-act="addbot">+ Add bot</button>' : me < 0 ? '<span class="note">Sit down to add a bot.</span>' : ''}`;
+  }
+  async function addBot() {
+    if (!uid || inGame()) return;
+    const i = seats.findIndex(x => !x); if (i < 0) { flash('Table is full'); return; }
+    const used = seats.filter(x => x && x.bot).map(x => x.name);
+    const nm = 'Bot ' + (BOT_NAMES.find(n => !used.includes('Bot ' + n)) || (i + 1));
+    try { const r = await seatRef[i].acquire({ holder: uid, ttlMs: 2500 }); if (!r.acquired) return; await seatRef[i].set({ uid: 'bot:' + i + ':' + Date.now().toString(36), name: nm, bot: true }); } catch (err) { writeFail(err); }
+  }
+  function botDiscard(s) {
+    const hand = G.hands[s], need = E.need(G, s), mine = G.dealer === s;
+    const seen = new Set(hand); const rest = []; for (let c = 0; c < 52; c++) if (!seen.has(c)) rest.push(c);
+    let best = null, bv = -1e9;
+    const combos = need === 1 ? hand.map(c => [c]) : hand.flatMap((a, i) => hand.slice(i + 1).map(b => [a, b]));
+    for (const d of combos) {
+      const keep = hand.filter(c => !d.includes(c));
+      let tot = 0; for (const st of rest) tot += E.scoreHand(keep, st, false).total;
+      let v = tot / rest.length;
+      const r = d.map(E.rank);
+      let cribV = 0;
+      if (d.length === 2) { if (r[0] === r[1]) cribV += 2; if (E.val(d[0]) + E.val(d[1]) === 15) cribV += 2; if (r.includes(4)) cribV += 1; if (Math.abs(r[0] - r[1]) === 1) cribV += .6; }
+      else if (r[0] === 4) cribV += 1;
+      v += mine ? cribV * .8 : -cribV * .8;
+      if (v > bv) { bv = v; best = d; }
+    }
+    return best;
+  }
+  function botPlay(s) {
+    const P = G.play, legal = P.hands[s].filter(c => E.canPlay(G, s, c));
+    let best = legal[0], bv = -1e9;
+    for (const c of legal) {
+      const cnt = P.count + E.val(c);
+      let v = E.pegScore(P.run.concat([{ s, c }]), cnt).reduce((a, x) => a + x.pts, 0) * 10;
+      if (cnt === 5 || cnt === 21) v -= 5; else if (cnt === 10 || cnt === 11) v -= 2.5;
+      if (P.count === 0) v += E.val(c) <= 4 ? 2 : -E.val(c) * .2;
+      if (cnt > 21 && cnt < 31) v += 1;
+      v += Math.random() * 1.2;
+      if (v > bv) { bv = v; best = c; }
+    }
+    return best;
+  }
+  let botTimer = 0, botKey = '';
+  function botTick() {
+    if (!ui.loaded || !isDriver() || !inGame()) return;
+    // bot pegs follow their score
+    G.order.forEach(s => {
+      if (!isBot(s)) return;
+      const target = Math.min((G.scores && G.scores[s]) || 0, 121), f = frontPeg(s), p = pegPos(s);
+      if (f < target && !(ui.botPeg && ui.botPeg[s] === target)) { ui.botPeg = ui.botPeg || {}; ui.botPeg[s] = target; queueWrite('peg' + s, () => pegRef[s].set({ a: Math.max(f, -1), b: target })).catch(() => { }); }
+      else if (f >= target && ui.botPeg) delete ui.botPeg[s];
+    });
+    let who = null, kind = '';
+    if (G.phase === 'discard') { const s = G.order.find(x => isBot(x) && E.need(G, x) > 0 && !discOk(x)); if (s != null) { who = s; kind = 'disc'; } }
+    else if (G.phase === 'cut') { const a = actor(); if (isBot(a)) { who = a; kind = 'cut'; } }
+    else if (G.phase === 'play') { const a = G.play.turn; if (isBot(a)) { who = a; kind = 'play'; } }
+    else if (G.phase === 'count') { const st = G.cnt.steps[G.cnt.idx]; if (isBot(st.s)) { who = st.s; kind = 'next'; } }
+    if (who == null) { botKey = ''; clearTimeout(botTimer); return; }
+    const key = G.gid + ':' + G.round + ':' + G.rev + ':' + kind + who + ':' + (discs[who] && discs[who].round);
+    if (key === botKey) return;
+    botKey = key; clearTimeout(botTimer);
+    const delay = kind === 'play' ? 1000 + Math.random() * 900 : kind === 'next' ? 2600 : 1300 + Math.random() * 1200;
+    const rev = G.rev, bsp = window.__botSpeed || 1;
+    botTimer = setTimeout(async () => {
+      if (G.rev !== rev || !isDriver()) { botKey = ''; return; }
+      if (kind === 'disc') { if (discOk(who)) return; const d = botDiscard(who); await queueWrite('disc' + who, () => discRef[who].set({ gid: G.gid, round: G.round, cards: d })); }
+      else if (kind === 'cut') await commit(S => { if (S.phase !== 'cut') return false; E.cut(S); return true; });
+      else if (kind === 'play') { const c = botPlay(who); await commit(S => E.playCard(S, who, c) ? true : false); }
+      else if (kind === 'next') await commit(S => { if (S.phase !== 'count') return false; E.nextCount(S); return true; });
+      botKey = '';
+      setTimeout(botTick, 50);
+    }, delay * bsp);
+  }
 
   /* ---------- sync ---------- */
   function setConn(txt, warn) {
@@ -1717,7 +1828,7 @@ function createApp(root, claude) {
   if (window.CribTable3D && window.THREE) { R.viewbtn.hidden = false; if (lsGet('crib.view') !== '2d') setView(true); else R.viewbtn.textContent = '3D view'; }
   init();
 
-  return { destroy() { if (t3) t3.destroy(); unsubs.forEach(u => { try { u(); } catch (e) { } }); root.innerHTML = ''; }, get G() { return G; }, get seat() { return mySeat(); }, get pegs() { return pegs; }, get t3() { return t3; }, get ui() { return ui; } };
+  return { destroy() { if (t3) t3.destroy(); unsubs.forEach(u => { try { u(); } catch (e) { } }); root.innerHTML = ''; }, get G() { return G; }, get seat() { return mySeat(); }, get pegs() { return pegs; }, get t3() { return t3; }, get ui() { return ui; }, addBot };
 }
 
 </script>
