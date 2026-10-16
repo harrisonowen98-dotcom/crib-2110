@@ -1201,15 +1201,15 @@ window.CribSFX = (function () {
       setCam();
       items.forEach(it => {
         const g = it.obj, dragging = cdrag && cdrag.moved && (cdrag.mine ? cdrag.c === it.id && it.gk === 'mh' : cdrag.it.gk === it.gk);
-        const ty = it.ty + (dragging ? 24 : 0) + (hoverIt === it && !dragging ? 6 : 0);
+        const ty = it.ty + (dragging ? 38 : 0) + (hoverIt === it && !dragging ? 6 : 0) + Math.abs(Math.sin(g.rotation.x)) * CH * .5 + Math.abs(Math.sin(g.rotation.z)) * CW * .5 + 1;
         g.position.x += (it.tx - g.position.x) * ki; g.position.z += (it.tz - g.position.z) * ki;
         it.vy += (ty - g.position.y) * .14 * k60; it.vy *= Math.pow(.74, k60); g.position.y += it.vy * k60;
         g.rotation.y += ang(g.rotation.y, it.tyaw) * ki;
         const vx = (g.position.x - it.px) / Math.max(dt, .001), vz = (g.position.z - it.pz) / Math.max(dt, .001); it.px = g.position.x; it.pz = g.position.z;
-        const lz = Math.max(-.4, Math.min(.4, -vx * .0011)), lx = Math.max(-.4, Math.min(.4, vz * .0011));
+        const lz = Math.max(-.22, Math.min(.22, -vx * .0009)), lx = Math.max(-.22, Math.min(.22, vz * .0009));
         g.rotation.z += (lz - g.rotation.z) * .2; g.rotation.x += (lx - g.rotation.x) * .2;
         if (it.flipA > .002) { it.flipA += (0 - it.flipA) * (1 - Math.exp(-dt * 8)); } else it.flipA = 0;
-        const inn = g.userData.inner; inn.rotation.x = it.flipA; inn.position.y = Math.sin(Math.min(Math.PI, it.flipA)) * 30;
+        const inn = g.userData.inner; inn.rotation.x = it.flipA; inn.position.y = Math.sin(Math.min(Math.PI, it.flipA)) * (CH * .5 + 8);
         const sc = dragging ? 1.06 : 1; g.scale.x += (sc - g.scale.x) * .25; g.scale.z = g.scale.x; g.scale.y = g.scale.x;
       });
       if (tgt.visible) { const pu = .5 + .5 * Math.sin(tClock * 5); tgt.userData.t1.material.opacity = .55 + .45 * pu; tgt.userData.gs.material.opacity = .55 + .45 * pu; const sc = 1 + .12 * pu; tgt.scale.set(sc, 1, sc); tgt.userData.gs.scale.set(40 * BS * (1 + .25 * pu), 40 * BS * (1 + .25 * pu), 1); }
