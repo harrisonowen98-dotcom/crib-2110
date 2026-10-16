@@ -305,6 +305,68 @@ body:has(.app.m3d) #app { max-width: none; }
 .app.m3d .dragnote { display: inline; }
 .app.m3d [data-act="discard"] { display: none; }
 
+/* ===== v9: pop-out menu, HUD overlays, big count ===== */
+.menubtn { font-weight: 700; }
+.scrim { position: fixed; inset: 0; z-index: 25; background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 30; width: min(400px, 94vw); overflow-y: auto; padding: 14px 16px max(20px, env(safe-area-inset-bottom, 0px)); background: rgba(12, 18, 16, .96); border-left: 1px solid var(--line); box-shadow: -20px 0 60px rgba(0, 0, 0, .55); display: grid; gap: 14px; align-content: start; }
+@keyframes dslide { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.drawer[hidden], .scrim[hidden] { display: none; }
+.dhead { display: flex; align-items: center; justify-content: space-between; }
+.dhead b { font: 700 18px var(--font-display); }
+.drawer section { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.drawer h4 { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.drawer .nm { display: flex; justify-content: space-between; gap: 10px; }
+.drawer .nm input { flex: 1; min-width: 0; width: auto; }
+.drawer .music { margin: 0; backdrop-filter: none; }
+.drawer .mrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.drawer .log { max-height: 150px; overflow: auto; }
+.drawer .help { margin: 0; padding: 10px 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+.switches { display: grid; gap: 8px; }
+.sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 600; text-align: left; }
+.sw[hidden] { display: none; }
+.sw i { font-style: normal; font-size: 12px; font-weight: 800; letter-spacing: .06em; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .1); color: var(--muted); min-width: 46px; text-align: center; }
+.sw.on i { background: var(--accent); color: #231a06; }
+.botbar { margin: 0; }
+/* banner: very clear who we're waiting on */
+.banner.waiting { min-height: 64px; border-color: color-mix(in srgb, var(--c) 70%, transparent); background: color-mix(in srgb, var(--c) 14%, var(--glass)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent), 0 6px 30px color-mix(in srgb, var(--c) 25%, transparent); }
+.banner.waiting .big { font-size: 30px; }
+.banner.waiting .dot { width: 22px; height: 22px; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.35); } }
+.waitpill { margin-left: auto; padding: 6px 14px; border-radius: 99px; background: rgba(255, 255, 255, .12); font: 700 20px var(--font-display); font-variant-numeric: tabular-nums; }
+.waitpill.mine { background: var(--accent); color: #231a06; }
+.banner:has(.waitpill) { justify-content: center; }
+.banner .waitpill { margin-left: 8px; }
+.tgt circle { animation: tgtp 1s ease-in-out infinite; transform-origin: center; filter: drop-shadow(0 0 2px #fff); }
+@keyframes tgtp { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+/* big pegging count */
+.countnum { font-size: 56px; }
+.toleft { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 12px; border-radius: 12px; background: rgba(255, 255, 255, .08); }
+.toleft b { font: 700 34px var(--font-display); color: var(--text); font-variant-numeric: tabular-nums; }
+.toleft i { font-style: normal; color: var(--muted); font-weight: 600; }
+/* full-screen 3D: no page scroll, panels float on top of the table */
+body:has(.app.m3d) { overflow: hidden; }
+.app.m3d { --chrome: 132px; }
+.app.m3d .zrow { position: fixed; z-index: 12; top: 142px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; pointer-events: none; }
+.app.m3d .zrow > .zone { pointer-events: auto; background: rgba(10, 16, 14, .74); backdrop-filter: blur(12px); box-shadow: 0 8px 30px rgba(0, 0, 0, .4); }
+.app.m3d [data-ph="discard"], .app.m3d [data-ph="cut"] { display: none; }
+.app.m3d .scorez { margin-left: auto; padding: 10px 14px; }
+.app.m3d [data-ph="play"] { padding: 12px 18px; }
+.app.m3d [data-ph="play"] .countnum { font-size: 96px; color: #fff; text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 55%, transparent); }
+.app.m3d [data-ph="play"] .toleft b { font-size: 52px; color: var(--accent); }
+.app.m3d [data-ph="play"] .toleft i { font-size: 18px; }
+.app.m3d [data-ph="play"] .run { display: none; }
+.app.m3d [data-ph="play"] .prev { align-self: end; }
+.app.m3d .countpanel { max-width: min(430px, 46vw); max-height: calc(100vh - 330px); overflow: auto; }
+.app.m3d .countpanel .cardsrow { display: none; }
+.app.m3d .countpanel .lines li { font-size: 15px; }
+@media (max-width: 760px) {
+  .app.m3d { --chrome: 150px; }
+  .app.m3d .zrow { top: 156px; flex-direction: column; align-items: stretch; }
+  .app.m3d .scorez { margin-left: 0; }
+  .app.m3d [data-ph="play"] .countnum { font-size: 64px; }
+  .banner.waiting .big { font-size: 22px; }
+}
+
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -629,10 +691,11 @@ window.CribSFX = (function () {
 /* 3D table: a three.js scene driven by the same state as the 2D UI.
    Board = the real v52 face texture on an extruded slab. Pegs, cards and seat plates live in mm. */
 (function () {
-  const TW = 1040, TD = 860, RAIL = 26;
-  const BOARD_Z = -70, BOARD_H = 16;
-  const RX = 430, RZ = 340;
-  const PLAY_Z = 150, DECK_X = -235, CRIB_X = 235;
+  const TW = 1200, TD = 980, RAIL = 26;
+  const BS = 1.45;                       // board scale: the 21-10 board is shown much bigger than life
+  const BOARD_Z = -60, BOARD_H = 16;
+  const RX = 500, RZ = 400;
+  const PLAY_Z = 178, DECK_X = -262, CRIB_X = 262;
   const CW = 63, CH = 88;
 
   function rrShape(w, h, r, hole) {
@@ -701,20 +764,38 @@ window.CribSFX = (function () {
     const bw = B.w, bh = B.h;
     const boardTex = colTex(new T.TextureLoader().load(B.img));
     const board = new T.Mesh(slab(rrShape(bw, bh, 13.5), BOARD_H, bw, bh), [new T.MeshStandardMaterial({ map: boardTex, roughness: .62 }), new T.MeshStandardMaterial({ color: 0x5a3a22, roughness: .6 })]);
-    board.position.set(0, 0, BOARD_Z); board.castShadow = true; board.receiveShadow = true; scene.add(board);
-    const bxz = (x, y) => ({ x: x - bw / 2, z: BOARD_Z + (y - bh / 2) });
+    board.position.set(0, 0, BOARD_Z); board.scale.set(BS, BS, BS); board.castShadow = true; board.receiveShadow = true; scene.add(board);
+    const BY = BOARD_H * BS;                // top surface of the (scaled) board
+    const bxz = (x, y) => ({ x: (x - bw / 2) * BS, z: BOARD_Z + (y - bh / 2) * BS });
+    /* crisp numerals drawn at high resolution in the empty gap row after every 5th hole of the middle lane */
+    { const K = 9.5, nc = document.createElement('canvas'); nc.width = Math.round(bw * K); nc.height = Math.round(bh * K);
+      const g = nc.getContext('2d'), mid = B.lanes[2].holes;
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+      const put2 = (txt, x, y, big) => { g.font = (big ? '800 ' + 7.6 * K : '800 ' + 6.2 * K) + 'px "Public Sans", Arial, sans-serif'; g.lineWidth = (big ? 2.2 : 1.8) * K; g.strokeStyle = 'rgba(250,240,205,.95)'; g.strokeText(txt, x * K, y * K); g.fillStyle = big ? '#2e1808' : '#4a2a12'; g.fillText(txt, x * K, y * K); };
+      for (let n = 5; n <= 120; n += 5) { const a = mid[n - 1], b = mid[Math.min(n, 119)]; const x = n === 120 ? a[0] + 3 : (a[0] + b[0]) / 2, y = n === 120 ? a[1] + 6.2 : (a[1] + b[1]) / 2; put2(String(n), x, y, n % 10 === 0); }
+      put2('121', B.finish[0], B.finish[1] + 7, true);
+      const nt = colTex(new T.CanvasTexture(nc)); nt.minFilter = T.LinearMipmapLinearFilter;
+      const nm = new T.Mesh(new T.PlaneGeometry(bw * BS, bh * BS).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ map: nt, transparent: true, depthWrite: false }));
+      nm.position.set(0, BY + .12, BOARD_Z); scene.add(nm); }
 
     /* ---- pegs ---- */
     const pegGeo = new T.LatheGeometry([[0, 0], [2.7, 0], [2.7, 9], [3.3, 10], [3.3, 12], [2.5, 14.2], [0, 14.8]].map(p => new T.Vector2(p[0], p[1])), 22);
     const pegObjs = [], pegOf = {};
     for (let s = 0; s < 5; s++) for (let wi = 0; wi < 2; wi++) {
       const m = new T.Mesh(pegGeo, new T.MeshStandardMaterial({ color: COL[s], roughness: .35, metalness: .08, emissive: 0x000000 }));
-      m.castShadow = true; m.userData.peg = { s, w: wi ? 'b' : 'a' }; m.visible = false;
-      m.position.set(0, BOARD_H, BOARD_Z); m.userData.t = new T.Vector3(0, BOARD_H, BOARD_Z);
+      m.castShadow = true; m.userData.peg = { s, w: wi ? 'b' : 'a' }; m.visible = false; m.scale.setScalar(BS * .92);
+      m.position.set(0, BY, BOARD_Z); m.userData.t = new T.Vector3(0, BY, BOARD_Z);
       scene.add(m); pegObjs.push(m); pegOf[s + ':' + (wi ? 'b' : 'a')] = m;
     }
-    const ring = new T.Mesh(new T.TorusGeometry(6.2, .8, 8, 32).rotateX(Math.PI / 2), new T.MeshBasicMaterial({ color: 0xe7c36a }));
+    const ring = new T.Mesh(new T.TorusGeometry(6.2 * BS, .8 * BS, 8, 32).rotateX(Math.PI / 2), new T.MeshBasicMaterial({ color: 0xe7c36a }));
     ring.visible = false; scene.add(ring);
+    /* glowing white ring on the hole where my peg needs to go */
+    const tgt = new T.Group(); tgt.visible = false;
+    { const t1 = new T.Mesh(new T.TorusGeometry(7 * BS, 1.5 * BS, 10, 40).rotateX(Math.PI / 2), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true }));
+      const gc = document.createElement('canvas'); gc.width = gc.height = 128; const gg = gc.getContext('2d'); const gr = gg.createRadialGradient(64, 64, 8, 64, 64, 62);
+      gr.addColorStop(0, 'rgba(255,255,255,.0)'); gr.addColorStop(.45, 'rgba(255,255,255,.8)'); gr.addColorStop(.7, 'rgba(255,255,255,.22)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); gg.fillStyle = gr; gg.fillRect(0, 0, 128, 128);
+      const gs = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(gc), transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending })); gs.scale.set(40 * BS, 40 * BS, 1); gs.position.y = 2;
+      tgt.add(t1, gs); tgt.userData = { t1, gs }; scene.add(tgt); }
 
     /* ---- cards ---- */
     const CN = ['spades', 'hearts', 'diamonds', 'clubs'];
@@ -762,7 +843,7 @@ window.CribSFX = (function () {
     let resumeAt = 0, lastDealSnd = 0;
     const local = new Map();          // my own in-flight / just-released moves
     let cdrag = null, mineDrag = null, hoverIt = null;
-    const HAND_Z = 296;
+    const HAND_Z = 352;
     function rTag(gk) { const G = api.G, b = (G.gid || '') + ':' + G.round; if (gk.startsWith('cnt')) return b + ':c' + (G.cnt ? G.cnt.idx : 0); if (gk.startsWith('run')) return b + ':p'; return b; }
     function getOvr(gk) {
       const rt = rTag(gk), l = local.get(gk), dr = cdrag && !cdrag.mine && cdrag.it.gk === gk;
@@ -836,7 +917,7 @@ window.CribSFX = (function () {
       const sp = new T.Sprite(new T.SpriteMaterial({ map: colTex(new T.CanvasTexture(cv)), transparent: true, depthWrite: false }));
       sp.scale.set(96, 24, 1); sp.position.set(x, 8, z); scene.add(sp);
     }
-    label('DECK', DECK_X, PLAY_Z + 66); label('CRIB', CRIB_X, PLAY_Z + 66);
+    label('DECK', DECK_X, PLAY_Z + 66);
 
     /* ---- sync from app state ---- */
     let active = false;
@@ -850,16 +931,18 @@ window.CribSFX = (function () {
         const sel = ui.pegSel && ui.pegSel.s === s && ui.pegSel.w === w;
         let q = dragging ? { x: d.x, y: d.y } : api.pxy(s, api.pegPos(s)[w]);
         const p = bxz(q.x, q.y);
-        m.userData.t.set(p.x, BOARD_H + (dragging ? 14 : sel ? 9 : 0), p.z);
+        m.userData.t.set(p.x, BY + (dragging ? 16 : sel ? 10 : 0) * BS * .7, p.z);
         m.userData.snap = !!dragging;
         m.material.emissive.setHex(sel ? 0x443310 : 0x000000);
       }
+      const pt = api.pegTarget ? api.pegTarget() : null;
+      if (pt) { const q = bxz(pt.x, pt.y); tgt.position.set(q.x, BY + 1.6, q.z); tgt.visible = true; } else tgt.visible = false;
     }
     let cribDrop = { x: CRIB_X, z: PLAY_Z }, cribShow = false, cribWant = false, lastDrop = null, cribLblKey = '';
     const nameOf = s => { const G = api.G; return (G.names && G.names[s]) || (api.seats[s] && api.seats[s].name) || ('Seat ' + (s + 1)); };
     function cribSpot(dealer, ref) {
       const gm = seatGeo((dealer - ref + 5) % 5), ca = Math.cos(gm.yaw), sa = Math.sin(gm.yaw);
-      return { x: Math.max(-440, Math.min(440, gm.cx + ca * 215)), z: Math.max(-350, Math.min(350, gm.cz - sa * 215)) };
+      return { x: Math.max(-520, Math.min(520, gm.cx + ca * 215)), z: Math.max(-400, Math.min(400, gm.cz - sa * 215)) };
     }
     const cribRing = new T.Mesh(new T.RingGeometry(46, 52, 48).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: .0, depthWrite: false }));
     cribRing.position.y = .4; cribRing.visible = false; scene.add(cribRing);
@@ -902,7 +985,7 @@ window.CribSFX = (function () {
       if (live) {
         const dn = Math.max(2, Math.min(12, Math.round(((G.deck && G.deck.length) || 20) / 3.5)));
         for (let j = 0; j < dn; j++) put('deck:' + j, 'deck', -1, false, DECK_X + ((j * 37) % 5 - 2) * .45, 1 + j * 1.3, PLAY_Z + ((j * 53) % 5 - 2) * .45, .018 * ((j * 7) % 5 - 2), deckSpawn);
-        if (G.starter >= 0 && G.phase !== 'discard') put('starter', 'starter', G.starter, true, DECK_X + 78, 1, PLAY_Z, 0, deckSpawn);
+        if (G.starter >= 0 && G.phase !== 'discard' && G.phase !== 'count') put('starter', 'starter', G.starter, true, DECK_X + 78, 1, PLAY_Z, 0, deckSpawn);
         const dcol = G.dealer >= 0 ? new T.Color(COL[G.dealer]).getHex() : 0;
         const cs = G.dealer >= 0 ? cribSpot(G.dealer, ref) : { x: CRIB_X, z: PLAY_Z };
         const base = G.crib ? G.crib.length : 0, pendSeats = [];
@@ -957,10 +1040,10 @@ window.CribSFX = (function () {
     /* ---- camera ---- */
     const cam = { az: 0, pol: .74, dist: 1500, tx: 0, ty: 0, tz: 40 }, goal = Object.assign({}, cam);
     function asp() { return Math.max(.4, host.clientWidth / Math.max(1, host.clientHeight)); }
-    function fitDist() { const a = asp(); return a < 1 ? Math.min(3600, 1700 / a) : Math.min(2300, Math.max(760, 790 / (Math.tan(19 * Math.PI / 180) * a))); }
+    function fitDist() { const a = asp(); return a < 1 ? Math.min(3600, 1700 / a) : Math.min(2600, Math.max(820, 900 / (Math.tan(19 * Math.PI / 180) * a))); }
     const VIEWS = {
       reset: () => ({ az: 0, pol: asp() < 1 ? .55 : .74, dist: fitDist(), tx: 0, ty: 0, tz: 30 }),
-      board: () => ({ az: 0, pol: .5, dist: Math.max(460, 330 / (Math.tan(19 * Math.PI / 180) * Math.max(.5, host.clientWidth / Math.max(1, host.clientHeight)))), tx: 0, ty: BOARD_H, tz: BOARD_Z + 8 }),
+      board: () => ({ az: 0, pol: .5, dist: Math.max(520, 330 * BS / (Math.tan(19 * Math.PI / 180) * Math.max(.5, host.clientWidth / Math.max(1, host.clientHeight)))), tx: 0, ty: BY, tz: BOARD_Z + 8 }),
       top: () => ({ az: 0, pol: .06, dist: Math.min(2300, fitDist() * 1.05), tx: 0, ty: 0, tz: 0 })
     };
     function setCam() {
@@ -979,11 +1062,11 @@ window.CribSFX = (function () {
 
     /* ---- pointer input ---- */
     const ray = new T.Raycaster(), v2 = new T.Vector2(), tmp = new T.Vector3();
-    const planeBoard = new T.Plane(new T.Vector3(0, 1, 0), -BOARD_H), planeTable = new T.Plane(new T.Vector3(0, 1, 0), -2);
+    const planeBoard = new T.Plane(new T.Vector3(0, 1, 0), -BY), planeTable = new T.Plane(new T.Vector3(0, 1, 0), -2);
     const pointers = new Map();
     let orbit = null, pinch = null, lastTap = { k: '', t: 0 }, lastSend = 0;
     function setRay(e) { const r = canvas.getBoundingClientRect(); v2.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(v2, camera); }
-    function boardPt(e) { setRay(e); return ray.ray.intersectPlane(planeBoard, tmp) ? { x: tmp.x + bw / 2, y: tmp.z - BOARD_Z + bh / 2 } : null; }
+    function boardPt(e) { setRay(e); return ray.ray.intersectPlane(planeBoard, tmp) ? { x: tmp.x / BS + bw / 2, y: (tmp.z - BOARD_Z) / BS + bh / 2 } : null; }
     function tablePt(e, y) { setRay(e); planeTable.constant = -(y == null ? 2 : y); return ray.ray.intersectPlane(planeTable, tmp) ? { x: tmp.x, z: tmp.z } : null; }
     function pickCard(e) {
       setRay(e); const bodies = []; items.forEach(it => bodies.push(it.body));
@@ -1129,9 +1212,10 @@ window.CribSFX = (function () {
         const inn = g.userData.inner; inn.rotation.x = it.flipA; inn.position.y = Math.sin(Math.min(Math.PI, it.flipA)) * 30;
         const sc = dragging ? 1.06 : 1; g.scale.x += (sc - g.scale.x) * .25; g.scale.z = g.scale.x; g.scale.y = g.scale.x;
       });
+      if (tgt.visible) { const pu = .5 + .5 * Math.sin(tClock * 5); tgt.userData.t1.material.opacity = .55 + .45 * pu; tgt.userData.gs.material.opacity = .55 + .45 * pu; const sc = 1 + .12 * pu; tgt.scale.set(sc, 1, sc); tgt.userData.gs.scale.set(40 * BS * (1 + .25 * pu), 40 * BS * (1 + .25 * pu), 1); }
       pegObjs.forEach(m => { if (!m.visible) return; if (m.userData.snap) m.position.copy(m.userData.t); else m.position.lerp(m.userData.t, kp); });
       const sel = ui.pegSel && pegOf[ui.pegSel.s + ':' + ui.pegSel.w];
-      ring.visible = !!(sel && sel.visible); if (ring.visible) { ring.position.set(sel.position.x, BOARD_H + 1.2, sel.position.z); ring.rotation.y = tClock; }
+      ring.visible = !!(sel && sel.visible); if (ring.visible) { ring.position.set(sel.position.x, BY + 1.4, sel.position.z); ring.rotation.y = tClock; }
       for (let i = 0; i < 5; i++) {
         const sp = plates[i], s = sp.userData.turn ? 1 + .035 * Math.sin(tClock * 4) : 1; sp.scale.set(190 * s, 65 * s, 1);
         discs[i].material.opacity = (discs[i].userData.o || 0) * (discs[i].userData.o === 1 ? .32 + .1 * Math.sin(tClock * 4) : .1);
@@ -1236,7 +1320,7 @@ function createApp(root, claude) {
   let db = null, user = null, uid = null, canWrite = true, myName = lsGet('crib.name') || '';
   let gameRef = null, seatRef = [], pegRef = [], discRef = [];
   let G = E.fresh(0), seats = Array(NSEATS).fill(null), pegs = Array(NSEATS).fill(null), discs = Array(NSEATS).fill(null);
-  const ui = { cribPend: [], sel: [], pegSel: null, drag: null, busy: false, confirm: null, lastNotice: -1, loaded: false, lastRound: -1, lastTurnMine: false, shuffleAt: 0, err: '' };
+  const ui = { menu: false, autoPeg: lsGet('crib.autopeg') === '1', voiceOn: lsGet('crib.voice') !== '0', turnKey: '', turnSince: Date.now(), spoke: 0, cribPend: [], sel: [], pegSel: null, drag: null, busy: false, confirm: null, lastNotice: -1, loaded: false, lastRound: -1, lastTurnMine: false, shuffleAt: 0, err: '' };
   const unsubs = [];
   const writeChain = {};
 
@@ -1247,13 +1331,10 @@ function createApp(root, claude) {
       <h1>Crib 21·10</h1>
       <div class="top-r">
         <span class="chip" data-r="conn"><i></i><span>Connecting…</span></span>
-        <button class="btn small" type="button" data-act="mute" data-r="mutebtn">Sound on</button>
-        <button class="btn small" type="button" data-act="view" data-r="viewbtn" hidden>2D view</button>
-        <label class="nm">Your name <input data-r="name" maxlength="14" autocomplete="off" placeholder="Name"></label>
+        <button class="btn small menubtn" type="button" data-act="menu" aria-label="Open menu">&#9776; Menu</button>
       </div>
     </div>
     <div class="banner" data-r="banner"></div>
-    <div class="botbar" data-r="botbar"></div>
     <div class="felt">
       <div class="g-top" data-r="slotsTop"></div>
       <div class="g-left" data-r="slotL"></div>
@@ -1261,29 +1342,41 @@ function createApp(root, claude) {
         <div class="stage3d" data-r="stage"></div>
         <div class="boardwrap" data-r="board"></div>
         <div class="zrow" data-r="zrow"></div>
-        <div class="log" data-r="log"></div>
       </div>
       <div class="g-right" data-r="slotR"></div>
       <div class="g-me" data-r="me"></div>
     </div>
-    <div class="music" data-r="music">
-      <div class="mrow"><b>Table music</b>
-        <input data-r="murl" placeholder="Paste a Spotify song / playlist link" autocomplete="off">
-        <button class="btn small primary" type="button" data-act="mplay">Play for everyone</button>
-        <button class="btn small" type="button" data-act="mstop">Stop</button></div>
-      <div class="mnote" data-r="mnote">Everyone sees the same player. Each person hears it through their own Spotify (Premium plays full songs; free accounts get previews).</div>
-      <div class="mplayer" data-r="mplayer"></div>
-    </div>
-    <details class="help"><summary>How it works</summary>
-      <ul>
-        <li>Pick a seat, then anyone seated hits <b>Deal</b>. The deck shuffles itself every round.</li>
-        <li>Five players: the dealer gets 4 cards, everyone else gets 5 and sends 1 to the dealer's crib.</li>
-        <li>The table tells you whose turn it is, plays Go and 31 for you, and adds up every point.</li>
-        <li>Pegs are all by hand: <b>drag</b> a peg, or <b>tap</b> a peg then tap a hole. A hole can only hold one peg.</li>
-        <li>3D table: drag empty space to spin around the table, right-drag or two fingers to pan, scroll or pinch to zoom. Drag any card or the deck around, double-tap a face-up card to turn it. Drag your own card up onto the table to play or discard it.</li>
-      </ul>
-      <div class="tools" data-r="tools"></div>
-    </details>
+    <div class="scrim" data-r="scrim" data-act="menu" hidden></div>
+    <aside class="drawer" data-r="drawer" hidden aria-label="Menu">
+      <div class="dhead"><b>Menu</b><button class="btn small" type="button" data-act="menu">Close ✕</button></div>
+      <section><h4>You</h4>
+        <label class="nm">Your name <input data-r="name" maxlength="14" autocomplete="off" placeholder="Name"></label>
+        <div class="dinv" data-r="dinv"></div></section>
+      <section><h4>Table</h4><div class="botbar" data-r="botbar"></div><div class="tools" data-r="tools"></div></section>
+      <section><h4>Settings</h4><div class="switches">
+        <button class="sw" type="button" data-act="autopeg" data-r="autobtn"></button>
+        <button class="sw" type="button" data-act="voice" data-r="voicebtn"></button>
+        <button class="sw" type="button" data-act="mute" data-r="mutebtn"></button>
+        <button class="sw" type="button" data-act="view" data-r="viewbtn" hidden></button></div></section>
+      <section class="music" data-r="music"><h4>Table music</h4>
+        <div class="mrow">
+          <input data-r="murl" placeholder="Paste a Spotify song / playlist link" autocomplete="off">
+          <button class="btn small primary" type="button" data-act="mplay">Play for everyone</button>
+          <button class="btn small" type="button" data-act="mstop">Stop</button></div>
+        <div class="mnote" data-r="mnote">Everyone sees the same player. Each person hears it through their own Spotify (Premium plays full songs; free accounts get previews).</div>
+        <div class="mplayer" data-r="mplayer"></div>
+      </section>
+      <section><h4>Recent</h4><div class="log" data-r="log"></div></section>
+      <details class="help"><summary>How it works</summary>
+        <ul>
+          <li>Pick a seat, then anyone seated hits <b>Deal</b>. The deck shuffles itself every round.</li>
+          <li>The table tells you whose turn it is, plays Go and 31 for you, and adds up every point.</li>
+          <li>Pegs: <b>drag</b> a peg to the glowing white ring, or turn on <b>Auto-move my peg</b>. A hole holds one peg.</li>
+          <li>When your peg lands on the right hole, the count moves to the next player by itself.</li>
+          <li>3D table: drag empty space to spin, right-drag or two fingers to pan, scroll or pinch to zoom. Drag cards and the deck around, double-tap a face-up card to turn it. Drag a card onto the dealer's crib to discard.</li>
+        </ul>
+      </details>
+    </aside>
   </div>`;
   const R = {};
   root.querySelectorAll('[data-r]').forEach(el => { R[el.dataset.r] = el; });
@@ -1310,8 +1403,13 @@ function createApp(root, claude) {
     const L = B.lanes[lane];
     if (p <= -1) return { x: L.starts[0][0], y: L.starts[0][1] };
     if (p === 0) return { x: L.starts[1][0], y: L.starts[1][1] };
-    if (p >= 121) return { x: B.finish[0] + (lane - 2) * 1.8, y: B.finish[1] + (lane - 2) * 0.5 };
+    if (p >= 121) return { x: B.finish[0], y: B.finish[1] };
     return { x: L.holes[p - 1][0], y: L.holes[p - 1][1] };
+  }
+  function pegTarget() {
+    const me = mySeat(); if (me < 0 || !inGame() || !G.order.includes(me) || G.phase === 'lobby') return null;
+    const t = Math.min((G.scores && G.scores[me]) || 0, 121), f = frontPeg(me);
+    return f < t ? pxy(me, t) : null;
   }
   function pegPos(s) { const p = pegs[s] || { a: -1, b: 0 }; return p; }
   function activeSeats() { return G.order && G.order.length ? G.order : seats.map((x, i) => x ? i : -1).filter(i => i >= 0); }
@@ -1322,6 +1420,7 @@ function createApp(root, claude) {
     const list = [];
     act.forEach(s => ['a', 'b'].forEach(w => list.push({ s, w })));
     list.sort((x, y) => ((ui.pegSel && ui.pegSel.s === x.s && ui.pegSel.w === x.w) ? 1 : 0) - ((ui.pegSel && ui.pegSel.s === y.s && ui.pegSel.w === y.w) ? 1 : 0));
+    const tg = pegTarget(); if (tg) h += `<g transform="translate(${tg.x.toFixed(1)} ${tg.y.toFixed(1)})" class="tgt"><circle r="7.5" fill="rgba(255,255,255,.18)"/><circle r="5.2" fill="none" stroke="#fff" stroke-width="1.3"/></g>`;
     list.forEach(({ s, w }) => {
       let pos = pegPos(s)[w], xy;
       if (ui.drag && ui.drag.s === s && ui.drag.w === w && ui.drag.moved) xy = { x: ui.drag.x, y: ui.drag.y }; else xy = pxy(s, pos);
@@ -1354,6 +1453,7 @@ function createApp(root, claude) {
     pegs[s] = cur;
     renderPegs(); renderSeats();
     queueWrite('peg' + s, () => pegRef[s].set({ a: cur.a, b: cur.b }));
+    setTimeout(maybeAuto, 60);
   }
   function pegAt(pt, maxD) {
     let best = null, bd = maxD;
@@ -1539,8 +1639,90 @@ function createApp(root, claude) {
       big = nameOf(G.winner) + ' wins!'; sub = 'Skunk check on the board, then play again.'; c = COL[G.winner]; mine = G.winner === me;
     }
     if (ui.err) { sub = ui.err; }
-    R.banner.className = 'banner' + (mine ? ' mine' : '');
-    R.banner.innerHTML = `${c ? `<span class="dot" style="--c:${c}"></span>` : ''}<span class="big">${esc(big)}</span><span class="sub">${esc(sub)}</span>`;
+    const w = curWait(), secs = Math.max(0, Math.floor((Date.now() - ui.turnSince) / 1000));
+    const pill = (w && inGame() && G.phase !== 'over') ? `<span class="waitpill${w.mine ? ' mine' : ''}">&#9201; ${secs}s</span>` : '';
+    if (w && !w.mine && inGame() && G.phase !== 'over' && !ui.err) { big = 'Waiting on ' + w.names; }
+    R.banner.className = 'banner' + (mine ? ' mine' : '') + (w && !w.mine && inGame() && G.phase !== 'over' ? ' waiting' : '');
+    R.banner.style.setProperty('--c', c || 'transparent');
+    R.banner.innerHTML = `${c ? `<span class="dot" style="--c:${c}"></span>` : ''}<span class="big">${esc(big)}</span><span class="sub">${esc(sub)}</span>${pill}`;
+  }
+
+  /* who is everybody waiting on right now */
+  function curWait() {
+    if (!inGame() || G.phase === 'over' || G.phase === 'lobby') return null;
+    const me = mySeat(); let seatsW = [];
+    if (G.phase === 'discard') seatsW = G.order.filter(s => E.need(G, s) > 0 && !discOk(s));
+    else if (G.phase === 'cut') seatsW = [actor()];
+    else if (G.phase === 'play') seatsW = [G.play.turn];
+    else if (G.phase === 'count') seatsW = [G.cnt.steps[G.cnt.idx].s];
+    if (!seatsW.length) return null;
+    return { seats: seatsW, mine: me >= 0 && seatsW.includes(me), names: seatsW.map(nameOf).join(', ') };
+  }
+  function turnSig() { const w = curWait(); if (!w) return ''; return [G.gid, G.round, G.phase, w.seats.join('+'), G.phase === 'play' ? G.play.run.length + ':' + G.play.count : G.phase === 'count' ? G.cnt.idx : ''].join('|'); }
+
+  /* sweet voice reminder */
+  let voice = null;
+  function pickVoice() {
+    try {
+      const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || []; if (!vs.length) return null;
+      const en = vs.filter(v => /^en/i.test(v.lang));
+      const pref = [/aria|jenny|samantha|zira|hazel|susan|karen|moira|tessa|fiona|victoria|serena|libby|sonia|natasha|google uk english female|google us english|female/i];
+      for (const re of pref) { const v = en.find(v => re.test(v.name)); if (v) return v; }
+      return en[0] || vs[0];
+    } catch (_) { return null; }
+  }
+  function speak(txt) {
+    if (!ui.voiceOn || !window.speechSynthesis) return;
+    try {
+      if (!voice) voice = pickVoice();
+      const u = new SpeechSynthesisUtterance(txt); if (voice) u.voice = voice;
+      u.pitch = 1.45; u.rate = 1.04; u.volume = 1; u.lang = voice ? voice.lang : 'en-US';
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch (_) { }
+  }
+  try { if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { voice = pickVoice(); }; } catch (_) { }
+  function remind() {
+    const w = curWait(); if (!w || !w.mine) return;
+    const nm = (myName || 'friend');
+    const lines = {
+      discard: [`Hey ${nm}! Drag a card onto the crib, sweetie.`, `${nm}, we're waiting on your crib card!`],
+      cut: [`Hey ${nm}! It's your turn to cut the deck.`, `${nm}, come on, cut the deck for us!`],
+      play: [`Hey ${nm}! It's your turn to play a card.`, `${nm}, we're waiting on you, sweetie. Play a card!`],
+      count: [`Hey ${nm}! Don't forget to move your peg.`, `${nm}, pop your peg on the glowing ring!`]
+    }[G.phase];
+    if (!lines) return;
+    speak(lines[Math.floor(Math.random() * lines.length)]);
+  }
+  setInterval(() => {
+    if (!inGame()) return;
+    const sig = turnSig();
+    if (sig !== ui.turnKey) { ui.turnKey = sig; ui.turnSince = Date.now(); ui.spoke = 0; }
+    renderBanner();
+    const w = curWait(), el = Date.now() - ui.turnSince;
+    if (w && w.mine && el >= 10000 && Date.now() - ui.spoke >= 20000) { ui.spoke = Date.now(); remind(); }
+  }, 1000);
+
+  /* auto peg + auto next */
+  let autoT = 0, nextT = 0, nextFor = '';
+  function maybeAuto() {
+    if (!ui.loaded || !canWrite || !inGame()) return;
+    const me = mySeat(); if (me < 0 || !G.order.includes(me)) return;
+    const target = Math.min((G.scores && G.scores[me]) || 0, 121), f = frontPeg(me);
+    if (ui.autoPeg && f < target && !ui.drag && !autoT) {
+      autoT = setTimeout(() => { autoT = 0; const t2 = Math.min((G.scores && G.scores[me]) || 0, 121), cur = pegPos(me); if (frontPeg(me) < t2 && !ui.drag) movePeg(me, cur.a <= cur.b ? 'a' : 'b', t2); }, 650);
+    }
+    if (G.phase === 'count' && G.cnt && G.cnt.steps[G.cnt.idx].s === me && f >= target && !ui.drag) {
+      const key = G.gid + ':' + G.round + ':' + G.cnt.idx;
+      if (nextFor !== key) {
+        nextFor = key; clearTimeout(nextT);
+        const wait = Math.max(750, ui.turnSince + 2400 - Date.now());
+        nextT = setTimeout(() => {
+          if (G.phase !== 'count' || !G.cnt || G.gid + ':' + G.round + ':' + G.cnt.idx !== key) return;
+          if (frontPeg(me) < Math.min((G.scores && G.scores[me]) || 0, 121)) { nextFor = ''; return; }
+          commit(S => { if (S.phase !== 'count') return false; E.nextCount(S); return true; });
+        }, wait);
+      }
+    }
   }
 
   function renderZones() {
@@ -1555,34 +1737,34 @@ function createApp(root, claude) {
     </div></div>`;
     if (!inGame()) {
       const n = seated().length;
-      mid = `<div class="zone playzone"><h3>Table</h3><div>${n ? seated().map(s => `<span class="chip" style="margin:0 6px 6px 0"><i style="background:${COL[s]}"></i>${esc(seats[s].name)}</span>`).join('') : '<span class="note">Nobody seated yet.</span>'}</div>
+      mid = `<div class="zone playzone" data-ph="lobby"><h3>Table</h3><div>${n ? seated().map(s => `<span class="chip" style="margin:0 6px 6px 0"><i style="background:${COL[s]}"></i>${esc(seats[s].name)}</span>`).join('') : '<span class="note">Nobody seated yet.</span>'}</div>
         <div class="acts" style="justify-content:flex-start">
           ${me >= 0 ? `<button class="btn primary" data-act="start" ${n >= 2 ? '' : 'disabled'}>Deal ${n >= 2 ? '(' + n + ' players)' : ''}</button><button class="btn" data-act="stand">Leave seat</button>` : ''}
         </div><div class="prev">First dealer is picked at random. Cards are dealt and shuffled for you.</div></div>`;
     } else if (G.phase === 'discard') {
-      mid = `<div class="zone playzone"><h3>Crib</h3><div class="note" style="text-align:left">Everybody sends ${G.order.length === 5 ? '1 card' : G.order.length === 2 ? '2 cards' : '1 card'} to ${esc(nameOf(G.dealer))}'s crib.${G.order.length === 5 ? ' The dealer has only 4 cards and doesn\'t discard.' : ''}</div></div>`;
+      mid = `<div class="zone playzone" data-ph="discard"><h3>Crib</h3><div class="note" style="text-align:left">Everybody sends ${G.order.length === 5 ? '1 card' : G.order.length === 2 ? '2 cards' : '1 card'} to ${esc(nameOf(G.dealer))}'s crib.${G.order.length === 5 ? ' The dealer has only 4 cards and doesn\'t discard.' : ''}</div></div>`;
     } else if (G.phase === 'cut') {
       const a = actor();
-      mid = `<div class="zone playzone"><h3>Cut</h3><div class="acts" style="justify-content:flex-start">
+      mid = `<div class="zone playzone" data-ph="cut"><h3>Cut</h3><div class="acts" style="justify-content:flex-start">
         <button class="btn primary" data-act="cut" ${me >= 0 ? '' : 'disabled'}>${a === me ? 'Cut the deck' : 'Cut for ' + esc(nameOf(a))}</button></div>
         <div class="prev">${esc(nameOf(a))} cuts. A jack scores 2 for the dealer.</div></div>`;
     } else if (G.phase === 'play') {
       const P = G.play;
-      mid = `<div class="zone playzone"><h3>Pegging</h3><div class="countrow"><span class="countnum">${P.count}</span><span class="prev">${P.last >= 0 ? 'Last card: ' + esc(nameOf(P.last)) : 'Fresh count'}</span></div>
+      mid = `<div class="zone playzone" data-ph="play"><h3>Pegging count</h3><div class="countrow"><span class="countnum">${P.count}</span><span class="toleft"><b>${31 - P.count}</b><i>to 31</i></span><span class="prev">${P.last >= 0 ? 'Last card: ' + esc(nameOf(P.last)) : 'Fresh count'}</span></div>
         <div class="run">${P.run.length ? P.run.map(x => cardHTML(x.c, 's' + x.s)).join('') : '<div class="slotph" style="--cw:54px">Play here</div>'}</div></div>`;
     } else if (G.phase === 'count') {
       const st = G.cnt.steps[G.cnt.idx], last = G.cnt.idx === G.cnt.steps.length - 1;
       const lines = st.r.items.map(it => `<li><span>${esc(it.why)} <span class="combo">${it.cards.map(E.name).join(' ')}</span></span><span class="pts">+${it.pts}</span></li>`).join('');
-      mid = `<div class="zone countpanel"><div class="hd"><span class="dot" style="width:14px;height:14px;border-radius:50%;background:${COL[st.s]};display:inline-block"></span><b>${esc(nameOf(st.s))}'s ${st.k === 'crib' ? 'crib' : 'hand'}</b></div>
+      mid = `<div class="zone countpanel" data-ph="count"><div class="hd"><span class="dot" style="width:14px;height:14px;border-radius:50%;background:${COL[st.s]};display:inline-block"></span><b>${esc(nameOf(st.s))}'s ${st.k === 'crib' ? 'crib' : 'hand'}</b></div>
         <div class="cardsrow">${sortCards(st.cards).map(c => cardHTML(c, '')).join('')}<span class="plus">+</span>${cardHTML(G.starter, 'starter')}</div>
         ${lines ? `<ul class="lines">${lines}</ul>` : '<div class="note" style="text-align:left;margin-bottom:8px">Nothing to count: nineteen!</div>'}
         <div class="total"><span class="t">${st.r.total}</span><span class="prev">${esc(nameOf(st.s))} is on ${(G.scores[st.s] || 0)}</span>
         <button class="btn primary" data-act="next" ${me >= 0 ? '' : 'disabled'}>${last ? 'Next round' : 'Next ▸'}</button></div></div>`;
     } else if (G.phase === 'over') {
-      mid = `<div class="zone playzone"><h3>Game over</h3><div class="countrow"><span class="countnum">${G.scores[G.winner] || 121}</span><span class="prev">${esc(nameOf(G.winner))} takes it</span></div>
+      mid = `<div class="zone playzone" data-ph="over"><h3>Game over</h3><div class="countrow"><span class="countnum">${G.scores[G.winner] || 121}</span><span class="prev">${esc(nameOf(G.winner))} takes it</span></div>
         <div class="acts" style="justify-content:flex-start">${me >= 0 ? '<button class="btn primary" data-act="lobby">Play again</button>' : ''}</div></div>`;
     }
-    const scoreboard = `<div class="zone"><h3>Scores</h3><div style="display:grid;gap:4px;min-width:130px">${(inGame() ? G.order : seated()).map(s => `<div style="display:flex;align-items:center;gap:8px"><span class="dot" style="width:12px;height:12px;border-radius:50%;background:${COL[s]};border:1px solid rgba(255,255,255,.6)"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nameOf(s))}</span><b style="font-variant-numeric:tabular-nums">${(G.scores && G.scores[s]) || 0}</b></div>`).join('') || '<span class="note">—</span>'}</div></div>`;
+    const scoreboard = `<div class="zone scorez"><h3>Scores</h3><div style="display:grid;gap:4px;min-width:130px">${(inGame() ? G.order : seated()).map(s => `<div style="display:flex;align-items:center;gap:8px"><span class="dot" style="width:12px;height:12px;border-radius:50%;background:${COL[s]};border:1px solid rgba(255,255,255,.6)"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nameOf(s))}</span><b style="font-variant-numeric:tabular-nums">${(G.scores && G.scores[s]) || 0}</b></div>`).join('') || '<span class="note">—</span>'}</div></div>`;
     R.zrow.innerHTML = deckBlock + mid + scoreboard;
     R.log.innerHTML = (G.log || []).slice(-5).reverse().map(l => `<div>${esc(l)}</div>`).join('');
   }
@@ -1718,6 +1900,9 @@ function createApp(root, claude) {
       case 'askTake': ui.confirm = 'take' + t.dataset.i; renderSeats(); break;
       case 'takeover': ui.confirm = null; claimSeat(+t.dataset.i, true); break;
       case 'cancel': ui.confirm = null; renderSeats(); renderTools(); break;
+      case 'menu': ui.menu = !ui.menu; R.drawer.hidden = R.scrim.hidden = !ui.menu; break;
+      case 'autopeg': ui.autoPeg = !ui.autoPeg; lsSet('crib.autopeg', ui.autoPeg ? '1' : '0'); setSwitches(); maybeAuto(); break;
+      case 'voice': ui.voiceOn = !ui.voiceOn; lsSet('crib.voice', ui.voiceOn ? '1' : '0'); setSwitches(); if (ui.voiceOn) speak('Hi! I\'ll remind you when it\'s your turn.'); break;
       case 'start': actStart(); break;
       case 'addbot': addBot(); break;
       case 'rmbot': freeSeat(+t.dataset.i); break;
@@ -1727,10 +1912,10 @@ function createApp(root, claude) {
       case 'cut': { const k = ui.cutK == null ? Math.floor(G.deck.length / 2) : ui.cutK; ui.cutK = null; commit(S => { if (S.phase !== 'cut') return false; E.cut(S, k); return true; }); break; }
       case 'next': commit(S => { if (S.phase !== 'count') return false; E.nextCount(S); return true; }); break;
       case 'askLobby': ui.confirm = 'lobby'; renderTools(); break;
-      case 'mute': { const m = S.toggle(); R.mutebtn.textContent = m ? 'Sound off' : 'Sound on'; break; }
+      case 'mute': { S.toggle(); setSwitches(); break; }
       case 'mplay': { const p = parseSpotify(R.murl.value); if (!p) { flash('Paste a Spotify link (open.spotify.com/...)'); break; } if (musicRef) queueWrite('music', () => musicRef.set({ type: p.type, id: p.id, by: myName || 'Someone', at: Date.now() })); R.murl.value = ''; break; }
       case 'mstop': { if (musicRef) queueWrite('music', () => musicRef.delete()); break; }
-      case 'view': setView(!appEl.classList.contains('m3d')); break;
+      case 'view': setView(!appEl.classList.contains('m3d')); setSwitches(); break;
       case 'lobby': ui.confirm = null; commit(S => { E.toLobby(S); return true; }).then(resetPegs); break;
     }
   });
@@ -1739,6 +1924,7 @@ function createApp(root, claude) {
     ui.cutK = +t.value; const n = G.deck.length, v = t.closest('.cutui').querySelector('.cutval');
     v.textContent = ui.cutK === 0 ? 'Top' : ui.cutK === n - 1 ? 'Bottom' : ui.cutK + ' cards down'; S.slide && S.slide(.4);
   });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.menu) { ui.menu = false; R.drawer.hidden = R.scrim.hidden = true; } });
   root.addEventListener('keydown', e => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-act="card"]')) { e.preventDefault(); actCard(+e.target.dataset.c); }
   });
@@ -1850,6 +2036,7 @@ function createApp(root, claude) {
     renderAll();
     checkDiscards();
     ui.loaded = true;
+    maybeAuto();
   }
   function onSeatSide() { renderAll(); }
 
@@ -1875,7 +2062,7 @@ function createApp(root, claude) {
     unsubs.push(musicRef.onSnapshot(s => { music = s.exists ? clone(s.data()) : null; R.mnote.textContent = music && music.by ? music.by + ' put on a song. Press play on the player below.' : 'Everyone sees the same player. Each person hears it through their own Spotify (Premium plays full songs; free accounts get previews).'; renderMusic(); }, errH('music')));
     for (let i = 0; i < NSEATS; i++) {
       unsubs.push(seatRef[i].onSnapshot(s => { seats[i] = s.exists && s.data().uid ? clone(s.data()) : null; if (ui.loaded) { renderAll(); } }, errH('seat')));
-      unsubs.push(pegRef[i].onSnapshot(s => { if (ui.drag && ui.drag.s === i) return; pegs[i] = s.exists ? clone(s.data()) : null; if (ui.loaded) { renderPegs(); renderSeats(); } }, errH('peg')));
+      unsubs.push(pegRef[i].onSnapshot(s => { if (ui.drag && ui.drag.s === i) return; pegs[i] = s.exists ? clone(s.data()) : null; if (ui.loaded) { renderPegs(); renderSeats(); maybeAuto(); } }, errH('peg')));
       unsubs.push(discRef[i].onSnapshot(s => { discs[i] = s.exists ? clone(s.data()) : null; if (ui.loaded) { renderAll(); checkDiscards(); } }, errH('disc')));
     }
   }
@@ -1926,18 +2113,24 @@ function createApp(root, claude) {
   const api3 = {
     B, COL, E, ui, pxy, pegAt, nearest, movePeg, renderPegs, pegPos, frontPeg, activeSeats, handCount, actor, discOk, inGame,
     get G() { return G; }, get seats() { return seats; }, get me() { return mySeat(); }, get uid() { return uid; },
-    sit: i => claimSeat(i), pendCrib: () => ui.cribPend.length, myCards, dropCard, actCard, sendObj, objs: () => objs
+    sit: i => claimSeat(i), pegTarget, pendCrib: () => ui.cribPend.length, myCards, dropCard, actCard, sendObj, objs: () => objs
   };
   function setView(m3) {
     if (m3 && !t3 && window.CribTable3D) t3 = window.CribTable3D.create(R.stage, api3);
     if (m3 && !t3) { m3 = false; flash('3D isn\'t available on this device'); }
     appEl.classList.toggle('m3d', m3);
-    R.viewbtn.textContent = m3 ? '2D view' : '3D view';
+    setSwitches();
     if (t3) { if (m3) t3.resume(); else t3.pause(); }
     lsSet('crib.view', m3 ? '3d' : '2d');
   }
-  R.mutebtn.textContent = S.muted ? 'Sound off' : 'Sound on';
-  if (window.CribTable3D && window.THREE) { R.viewbtn.hidden = false; if (lsGet('crib.view') !== '2d') setView(true); else R.viewbtn.textContent = '3D view'; }
+  function setSwitches() {
+    const sw = (el, on, label) => { if (!el) return; el.classList.toggle('on', !!on); el.innerHTML = `<span>${label}</span><i>${on ? 'On' : 'Off'}</i>`; };
+    sw(R.autobtn, ui.autoPeg, 'Auto-move my peg'); sw(R.voicebtn, ui.voiceOn, 'Voice reminders');
+    sw(R.mutebtn, !S.muted, 'Sound effects');
+    if (R.viewbtn) { const m3 = appEl.classList.contains('m3d'); R.viewbtn.innerHTML = `<span>3D table</span><i>${m3 ? 'On' : 'Off'}</i>`; R.viewbtn.classList.toggle('on', m3); }
+  }
+  setSwitches();
+  if (window.CribTable3D && window.THREE) { R.viewbtn.hidden = false; if (lsGet('crib.view') !== '2d') setView(true); }
   init();
 
   return { destroy() { if (t3) t3.destroy(); unsubs.forEach(u => { try { u(); } catch (e) { } }); root.innerHTML = ''; }, get G() { return G; }, get seat() { return mySeat(); }, get pegs() { return pegs; }, get t3() { return t3; }, get ui() { return ui; }, addBot };
@@ -1952,11 +2145,11 @@ function createApp(root, claude) {
   var room=(new URLSearchParams(location.search).get('room')||'main');
   var app=createApp(document.getElementById('app'), makeCribClaude(uid,{room:room}));
   window.__app=app;
-  var tr=document.querySelector('.top-r');
+  var tr=document.querySelector('[data-r=dinv]')||document.querySelector('.top-r');
   if(tr){var b=document.createElement('button');b.type='button';b.className='btn small';b.textContent='Copy invite link';
     b.onclick=function(){var u=location.href;function done(){b.textContent='Link copied';setTimeout(function(){b.textContent='Copy invite link';},1800);}
       if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(done,function(){prompt('Copy this link',u);});}else{prompt('Copy this link',u);}};
-    tr.insertBefore(b,tr.firstChild);}
+    tr.appendChild(b);}
 })();
 
 </script>
