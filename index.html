@@ -1068,8 +1068,17 @@ window.CribSFX = (function () {
     function setRay(e) { const r = canvas.getBoundingClientRect(); v2.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(v2, camera); }
     function boardPt(e) { setRay(e); return ray.ray.intersectPlane(planeBoard, tmp) ? { x: tmp.x / BS + bw / 2, y: (tmp.z - BOARD_Z) / BS + bh / 2 } : null; }
     function tablePt(e, y) { setRay(e); planeTable.constant = -(y == null ? 2 : y); return ray.ray.intersectPlane(planeTable, tmp) ? { x: tmp.x, z: tmp.z } : null; }
+    function solidClamp(x, z) {
+      const M = 50, hx = bw / 2 * BS + M, hz = bh / 2 * BS + M, cz = BOARD_Z;
+      x = Math.max(-520, Math.min(520, x)); z = Math.max(-400, Math.min(400, z));
+      if (Math.abs(x) < hx && Math.abs(z - cz) < hz) {
+        const px = hx - Math.abs(x), pz = hz - Math.abs(z - cz);
+        if (px < pz) x = (x < 0 ? -1 : 1) * hx; else z = cz + ((z - cz) < 0 ? -1 : 1) * hz;
+      }
+      return { x, z };
+    }
     function pickCard(e) {
-      setRay(e); const bodies = []; items.forEach(it => bodies.push(it.body));
+      setRay(e); const bodies = []; items.forEach(it => { if (/^h\d/.test(it.gk) || it.gk === 'crib') return; bodies.push(it.body); });
       const h = ray.intersectObjects(bodies, false); return h.length ? { it: h[0].object.userData.it, d: h[0].distance, y: h[0].point.y } : null;
     }
     function sendOvr(gk, entry, end) {
@@ -1100,7 +1109,7 @@ window.CribSFX = (function () {
       }
       if (pc) {
         const tp = tablePt(e, pc.y), it = pc.it, base = it.gk === 'mh' ? { dx: 0, dz: 0, dr: 0 } : (getOvr(it.gk) || { dx: 0, dz: 0, dr: 0 });
-        cdrag = { it, mine: it.gk === 'mh', c: it.id, sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, p0: tp || { x: 0, z: 0 }, base };
+        cdrag = { it, mine: it.gk === 'mh', c: it.id, sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, p0: tp || { x: 0, z: 0 }, base, bx: it.tx - (base.dx || 0), bz: it.tz - (base.dz || 0) };
         e.preventDefault(); return;
       }
       setRay(e); const ps = ray.intersectObjects(plates, false);
@@ -1124,8 +1133,8 @@ window.CribSFX = (function () {
         if (cdrag.moved) {
           const tp = tablePt(e, 2); if (!tp) return;
           const dx = tp.x - cdrag.p0.x, dz = tp.z - cdrag.p0.z;
-          if (cdrag.mine) mineDrag = { c: cdrag.c, x: cdrag.it.tx0 !== undefined ? cdrag.it.tx0 + dx : tp.x, z: cdrag.it.tz0 !== undefined ? cdrag.it.tz0 + dz : tp.z };
-          else sendOvr(cdrag.it.gk, { dx: cdrag.base.dx + dx, dz: cdrag.base.dz + dz, dr: cdrag.base.dr || 0, flip: !!cdrag.base.flip, r: rTag(cdrag.it.gk), by: api.uid });
+          if (cdrag.mine) { const q = solidClamp(cdrag.it.tx0 !== undefined ? cdrag.it.tx0 + dx : tp.x, cdrag.it.tz0 !== undefined ? cdrag.it.tz0 + dz : tp.z); mineDrag = { c: cdrag.c, x: q.x, z: q.z }; }
+          else { const q = solidClamp(cdrag.bx + cdrag.base.dx + dx, cdrag.bz + cdrag.base.dz + dz); sendOvr(cdrag.it.gk, { dx: q.x - cdrag.bx, dz: q.z - cdrag.bz, dr: cdrag.base.dr || 0, flip: !!cdrag.base.flip, r: rTag(cdrag.it.gk), by: api.uid }); }
           sync();
         }
       } else if (orbit) {
