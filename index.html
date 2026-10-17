@@ -417,7 +417,9 @@ body:has(.app.m3d) { overflow: hidden; }
   E.award = (S, seat, pts, why) => {
     if (!pts || S.phase === 'over') return;
     S.scores[seat] = (S.scores[seat] || 0) + pts;
-    S.notice = { n: (S.notice ? S.notice.n : 0) + 1, seat, pts, why, total: S.scores[seat] };
+    let np = pts, nw = why;
+    if (S._nb) { if (S._nb.seat === seat) { S._nb.pts += pts; S._nb.why.push(why); } else S._nb = { seat, pts, why: [why] }; np = S._nb.pts; nw = S._nb.why.join(' + '); }
+    S.notice = { n: (S.notice ? S.notice.n : 0) + 1, seat, pts: np, why: nw, total: S.scores[seat] };
     E.log(S, `${S.names[seat]} +${pts} · ${why}`);
     if (S.scores[seat] >= 121 && S.winner < 0) {
       S.winner = seat; S.phase = 'over';
@@ -517,11 +519,13 @@ body:has(.app.m3d) { overflow: hidden; }
     P.run.push({ s, c });
     P.last = s;
     E.log(S, `${S.names[s]} plays ${E.name(c)} (${P.count})`);
+    S._nb = { seat: s, pts: 0, why: [] };
     for (const it of E.pegScore(P.run, P.count)) E.award(S, s, it.pts, it.why);
-    if (S.phase === 'over') return true;
+    if (S.phase === 'over') { S._nb = null; return true; }
     if (P.count === 31) { P.done.push(...P.run); P.run = []; P.count = 0; P.passed = {}; }
     P.turn = E.nextOf(S.order, s);
     E.resolve(S);
+    S._nb = null;
     return true;
   };
 
