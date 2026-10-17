@@ -366,6 +366,8 @@ body:has(.app.m3d) { overflow: hidden; }
   .app.m3d [data-ph="play"] .countnum { font-size: 64px; }
   .banner.waiting .big { font-size: 22px; }
 }
+/* v12: camera buttons live bottom-right so the scoreboard never covers them */
+.vbtns { top: auto !important; bottom: 12px; right: 12px; z-index: 14; }
 
 </style></head><body>
 <div id="app"></div>
