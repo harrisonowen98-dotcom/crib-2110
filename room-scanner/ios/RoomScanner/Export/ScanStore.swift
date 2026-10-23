@@ -58,7 +58,7 @@ final class ScanStore: ObservableObject {
     }
 
     /// Creates the (new) version folder skeleton for a scan about to start.
-    func createScanFolder(name: String) throws -> (url: URL, version: Int, folder: String) {
+    nonisolated func createScanFolder(name: String) throws -> (url: URL, version: Int, folder: String) {
         let fm = FileManager.default
         let existing = (try? fm.contentsOfDirectory(atPath: root.path)) ?? []
         let v = Self.nextVersion(name: name, existing: existing)

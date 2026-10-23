@@ -24,18 +24,17 @@ jobs:
           head -12 RoomScanner.xcodeproj/project.pbxproj; xcodebuild -list -project RoomScanner.xcodeproj 2>&1 | head -30
       - name: Build (no signing)
         run: |
-          set -o pipefail
           xcodebuild -project RoomScanner.xcodeproj -scheme RoomScanner -sdk iphoneos -configuration Release \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build 2>&1 | tee build.log | grep -E "error:|warning: unre|BUILD (SUCCEEDED|FAILED)" || true
-          test -d build/Build/Products/Release-iphoneos/RoomScanner.app
+            build > build.log 2>&1 && echo "BUILD OK" || { echo "BUILD FAILED"; grep -E "error:" build.log | sort -u | head -60; exit 1; }
       - name: Package .ipa
         run: |
           mkdir -p Payload && cp -R build/Build/Products/Release-iphoneos/RoomScanner.app Payload/
           zip -qr RoomScanner-unsigned.ipa Payload
       - name: Unit tests (simulator)
         continue-on-error: true
-        run: xcodebuild -project RoomScanner.xcodeproj -scheme RoomScanner -destination 'platform=iOS Simulator,name=iPhone 15' test CODE_SIGNING_ALLOWED=NO 2>&1 | tail -40
+        run: |
+          xcodebuild -project RoomScanner.xcodeproj -scheme RoomScanner -destination 'platform=iOS Simulator,name=iPhone 17' test CODE_SIGNING_ALLOWED=NO > test.log 2>&1 && echo "TESTS PASSED" || { echo "TESTS FAILED"; grep -E "error:|failed|Executed" test.log | sort -u | head -40; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         with:

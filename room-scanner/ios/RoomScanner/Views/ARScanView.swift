@@ -55,7 +55,7 @@ struct ARScanView: UIViewRepresentable {
             let vSrc = SCNGeometrySource(buffer: v.buffer, vertexFormat: v.format, semantic: .vertex, vertexCount: v.count, dataOffset: v.offset, dataStride: v.stride)
             let f = g.faces
             let data = Data(bytesNoCopy: f.buffer.contents(), count: f.bytesPerIndex * f.count * f.indexCountPerPrimitive, deallocator: .none)
-            let element = SCNGeometryElement(data: data, primitiveType: .triangle, primitiveCount: f.count, bytesPerIndex: f.bytesPerIndex)
+            let element = SCNGeometryElement(data: data, primitiveType: .triangles, primitiveCount: f.count, bytesPerIndex: f.bytesPerIndex)
             let geo = SCNGeometry(sources: [vSrc], elements: [element])
             let m = SCNMaterial(); m.fillMode = .lines; m.diffuse.contents = color; m.isDoubleSided = true; m.lightingModel = .constant
             geo.materials = [m]
