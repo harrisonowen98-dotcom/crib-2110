@@ -99,7 +99,7 @@ function syncTex(L: Loaded, show: boolean) {
   for (const k of ['lod1', 'full'] as const) if (L.tex[k]) L.tex[k]!.visible = show && k === want;
   if (show && !L.tex[want]) {
     const file = want === 'full' ? 'build/room.glb' : 'build/room_lod1.glb';
-    L.src.buf(file).then((buf) => new GLTFLoader().parse(buf, '', (g) => { g.scene.traverse((o: any) => { if (o.isMesh) o.material.side = THREE.FrontSide; }); L.tex[want] = g.scene; L.group.add(g.scene); applyMode(); }, () => toast('No textured model — run the pipeline build'))).catch(() => toast('No textured model — run the pipeline build'));
+    L.src.buf(file).then((buf) => new GLTFLoader().parse(buf, '', (g) => { g.scene.traverse((o: any) => { if (o.isMesh) { o.material.side = THREE.FrontSide; o.material.metalness = 0; o.material.roughness = 1; } }); L.tex[want] = g.scene; L.group.add(g.scene); applyMode(); }, () => toast('No textured model — run the pipeline build'))).catch(() => toast('No textured model — run the pipeline build'));
   }
 }
 const knollGroups = new WeakMap<Loaded, THREE.Group>();
@@ -134,7 +134,7 @@ function frameKnolling(L: Loaded) { const c = L.bbox; camera.position.set(c.max.
 const keys = new Set<string>(); let yaw = 0, pitch = 0;
 function enterWalk(L: Loaded) {
   const c = L.bbox.getCenter(new THREE.Vector3());
-  camera.position.set(c.x - 1.2, state.eye, c.z - 1.2); yaw = -Math.PI * 0.75; pitch = 0;
+  camera.position.set(c.x - 1.2, state.eye, c.z - 1.2); yaw = Math.PI * 0.75; pitch = 0;
 }
 function updateWalk(dt: number) {
   if (state.view !== 'walk' || !current) return;
@@ -294,8 +294,8 @@ async function init() {
   await new Promise((r) => setTimeout(r, 50));
   const cam = params.get('cam')?.split(',').map(Number);
   if (cam?.length === 6 && current) { camera.position.set(cam[0], cam[1], cam[2]); orbit.target.set(cam[3], cam[4], cam[5]); orbit.update(); }
-  if (state.view === 'walk' && current) enterWalk(current);
-  if (state.view === 'knolling' && current && !cam) frameKnolling(current);
+  const wantView = params.get('view') ?? 'dollhouse'; state.view = wantView;   // select() resets walk -> dollhouse; restore from the link
+  if (current) { if (wantView === 'walk') enterWalk(current); else if (wantView === 'layout' && !cam) { frameRoom(current, 'top'); state.view = 'layout'; } else if (wantView === 'knolling' && !cam) frameKnolling(current); }
   applyMode();
 
   $('#views').onclick = (e) => { const v = (e.target as HTMLElement).dataset.view; if (!v || !current) return; state.view = v; if (v === 'walk') { enterWalk(current); camera.near = 0.05; } else if (v === 'layout') frameRoom(current, 'top'), (state.view = 'layout'); else if (v === 'knolling') frameKnolling(current); else frameRoom(current, 'home'); applyMode(); };
