@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomscanner.local/schemas/manifest.schema.json",
+  "title": "manifest.json",
+  "type": "object",
+  "required": ["schemaVersion", "scanName", "version", "folderName", "createdAt", "device", "units", "coordinateSystem", "counts", "files", "rooms", "README_FOR_AI"],
+  "properties": {
+    "schemaVersion": {"type": "string"},
+    "scanName": {"type": "string"},
+    "version": {"type": "integer", "minimum": 1},
+    "folderName": {"type": "string", "pattern": "^.+_v[0-9]+_[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "createdAt": {"type": "string"},
+    "synthetic": {"type": "boolean"},
+    "device": {"type": "object", "required": ["model", "iosVersion"], "properties": {"model": {"type": "string"}, "iosVersion": {"type": "string"}, "app": {"type": "string"}}},
+    "units": {"const": "meters"},
+    "coordinateSystem": {"type": "object", "required": ["handedness", "up", "cameraForward"], "properties": {"handedness": {"const": "right"}, "up": {"const": "+Y"}, "cameraForward": {"const": "-Z"}}},
+    "counts": {"type": "object", "required": ["frames", "photos", "rooms"], "properties": {"frames": {"type": "integer"}, "photos": {"type": "integer"}, "rooms": {"type": "integer"}}},
+    "depth": {"type": "object", "properties": {"format": {"type": "string"}, "width": {"type": "integer"}, "height": {"type": "integer"}, "scale": {"type": "string"}}},
+    "files": {"type": "array", "items": {"type": "object", "required": ["path", "bytes", "sha256"], "properties": {"path": {"type": "string"}, "bytes": {"type": "integer"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}},
+    "rooms": {"type": "array", "items": {"type": "object", "required": ["id", "name", "file", "floorArea", "ceilingHeight", "boundingBox", "originTransform"], "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "file": {"type": "string"}, "usdz": {"type": ["string", "null"]}, "floorArea": {"type": "number"}, "ceilingHeight": {"type": "number"}, "boundingBox": {"type": "object", "required": ["min", "max"], "properties": {"min": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}, "max": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}}}, "originTransform": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "number"}}}}}},
+    "README_FOR_AI": {"type": "string", "minLength": 200}
+  }
+}

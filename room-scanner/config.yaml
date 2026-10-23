@@ -1,0 +1,21 @@
+# Single config for pipeline, generator and (defaults for) viewer. Units: meters.
+pipeline:
+  voxel_size: 0.02            # point cloud downsample
+  min_confidence: 1           # ARKit confidence: 0 low, 1 medium, 2 high -> keep >= this
+  outlier_nb_neighbors: 20
+  outlier_std_ratio: 2.0
+  fill_gaps: true
+  tsdf_voxel: 0.02
+  texture_size: 4096
+  max_iterations_refine: 8
+capture:
+  keyframe_translation_m: 0.25
+  keyframe_rotation_deg: 15
+  blur_laplacian_min: 60
+viewer:
+  port: 5187
+  eye_height_m: 1.6
+synthetic:
+  frames: 150
+  seed: 7
+  room: {width: 5.0, depth: 4.0, height: 2.6}

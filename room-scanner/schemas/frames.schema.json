@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomscanner.local/schemas/frames.schema.json",
+  "title": "frames.json",
+  "type": "object",
+  "required": ["schemaVersion", "units", "frames"],
+  "properties": {
+    "schemaVersion": {"type": "string"},
+    "units": {"const": "meters"},
+    "poseConvention": {"type": "string"},
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["frameIndex", "timestamp", "trackingState", "camera", "confidence", "file", "confidenceFile", "width", "height", "intrinsics", "rgb", "rgbWidth", "rgbHeight", "rgbIntrinsics", "transform"],
+        "properties": {
+          "frameIndex": {"type": "integer", "minimum": 0},
+          "timestamp": {"type": "number"},
+          "trackingState": {"enum": ["normal", "limited", "notAvailable"]},
+          "camera": {
+            "type": "object",
+            "required": ["exposureDuration", "iso", "shutter", "whiteBalance"],
+            "properties": {
+              "exposureDuration": {"type": "number"},
+              "iso": {"type": "number"},
+              "shutter": {"type": "number"},
+              "whiteBalance": {"type": "object", "required": ["r", "g", "b"], "properties": {"r": {"type": "number"}, "g": {"type": "number"}, "b": {"type": "number"}}}
+            }
+          },
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1, "description": "Mean fraction of depth pixels with ARKit confidence >= medium"},
+          "file": {"type": "string", "description": "Depth map, 16-bit PNG, millimeters, 0 = invalid"},
+          "confidenceFile": {"type": "string", "description": "8-bit PNG, values 0/1/2 (ARConfidenceLevel)"},
+          "width": {"type": "integer"},
+          "height": {"type": "integer"},
+          "intrinsics": {"$ref": "#/$defs/mat3"},
+          "rgb": {"type": "string", "description": "Color JPEG matching the depth frame"},
+          "rgbWidth": {"type": "integer"},
+          "rgbHeight": {"type": "integer"},
+          "rgbIntrinsics": {"$ref": "#/$defs/mat3"},
+          "photo": {"type": ["string", "null"], "description": "Optional full-res keyframe JPEG in photos/"},
+          "transform": {"$ref": "#/$defs/mat4"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "mat3": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number"}}},
+    "mat4": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "number"}}}
+  }
+}

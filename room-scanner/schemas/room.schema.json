@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roomscanner.local/schemas/room.schema.json",
+  "title": "rooms/room-N.json (RoomPlan CapturedRoom, simplified)",
+  "type": "object",
+  "required": ["id", "name", "units", "walls", "doors", "windows", "openings", "objects", "floorPolygon", "ceilingHeight"],
+  "properties": {
+    "id": {"type": "string"},
+    "name": {"type": "string"},
+    "units": {"const": "meters"},
+    "ceilingHeight": {"type": "number"},
+    "floorPolygon": {"type": "array", "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}, "description": "[x,z] corners, counter-clockwise seen from above"},
+    "walls": {"type": "array", "items": {"$ref": "#/$defs/surface"}},
+    "doors": {"type": "array", "items": {"$ref": "#/$defs/surface"}},
+    "windows": {"type": "array", "items": {"$ref": "#/$defs/surface"}},
+    "openings": {"type": "array", "items": {"$ref": "#/$defs/surface"}},
+    "objects": {"type": "array", "items": {"$ref": "#/$defs/object"}}
+  },
+  "$defs": {
+    "mat4": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "number"}}},
+    "dims": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3, "description": "[width(x), height(y), depth/thickness(z)] in the item's local frame"},
+    "surface": {"type": "object", "required": ["id", "dimensions", "transform"], "properties": {"id": {"type": "string"}, "dimensions": {"$ref": "#/$defs/dims"}, "transform": {"$ref": "#/$defs/mat4"}, "parent": {"type": ["string", "null"]}, "confidence": {"type": "string"}}},
+    "object": {"type": "object", "required": ["id", "category", "dimensions", "transform"], "properties": {"id": {"type": "string"}, "category": {"enum": ["storage", "refrigerator", "stove", "bed", "sink", "washerDryer", "toilet", "bathtub", "oven", "dishwasher", "table", "sofa", "chair", "fireplace", "television", "stairs", "other"]}, "dimensions": {"$ref": "#/$defs/dims"}, "transform": {"$ref": "#/$defs/mat4"}, "confidence": {"type": "string"}}}
+  }
+}
