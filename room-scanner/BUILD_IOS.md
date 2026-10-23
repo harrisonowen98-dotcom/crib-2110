@@ -1,8 +1,7 @@
 # Build & install the Room Scanner iPhone app
 
-**Honest status:** the Swift code was written without access to a Mac/Xcode, so it has **not been compiled yet**. Expect the first build to
-need small fixes (usually a renamed API or a missing import). Everything below is what you need to do; the code is in `ios/`.
-The one thing that needs a Mac is the build itself — Windows cannot build iOS apps.
+**Status:** the app compiles (GitHub's macOS runner builds it with Xcode 16 and the 6 unit tests pass — see the Actions tab). It has **never been run on a real iPhone**, so expect runtime surprises (the RoomPlan-shares-ARSession design below is the main one).
+Windows can't build iOS apps, but you don't need a Mac: Route D builds in the cloud and installs from Windows.
 
 Requirements: iPhone with LiDAR (16 Pro Max ✔), iOS 17+, a Mac with Xcode 15+ (or a cloud Mac), an Apple ID (free works).
 
@@ -29,6 +28,19 @@ Run the unit tests: **Cmd+U** (ExporterTests: schema keys, matrices, versioning,
 2. Follow Route A steps 1–7 on that machine. You cannot plug your phone into a cloud Mac, so instead **Product → Archive** and
    distribute with **Ad Hoc / Development** using your Apple Developer account (paid, 99 USD/yr) — or use TestFlight.
    With a *free* Apple ID, cloud Macs can't install to your phone; borrow a real Mac for step 8–11 instead.
+
+## Route D — no Mac at all (recommended for you): cloud build + Sideloadly from Windows
+1. Open the repo on GitHub → **Actions** tab → latest green **Build iOS app (unsigned)** run → scroll to **Artifacts** → click **RoomScanner-unsigned-ipa** (downloads a zip). Unzip it → `RoomScanner-unsigned.ipa`.
+   (Re-run any time: Actions → Build iOS app (unsigned) → **Run workflow**.)
+2. Install **iTunes** and **iCloud** from apple.com (the direct downloads, NOT the Microsoft Store versions) — Sideloadly needs their drivers.
+3. Install **Sideloadly** from https://sideloadly.io and open it.
+4. Plug the iPhone into the PC with a cable, unlock it, tap **Trust This Computer**.
+5. Drag `RoomScanner-unsigned.ipa` onto Sideloadly. Pick your iPhone in the device box. Type your Apple ID email.
+6. Click **Start**, enter your Apple ID password (and the 2FA code if asked).
+7. iPhone: **Settings → Privacy & Security → Developer Mode → On**, restart when asked. (If the switch isn't there yet, try the install in step 6 first, then it appears.)
+8. iPhone: **Settings → General → VPN & Device Management → your Apple ID → Trust**.
+9. Open **Room Scanner**. Allow the camera. Scan.
+10. A free Apple ID app expires after **7 days** — repeat steps 4–6 to refresh (scans stay in the app).
 
 ## Route C — start capturing today (no app yet)
 Scan with Polycam / Scaniverse / 3D Scanner App, export `.obj`/`.ply`/`.glb` + photos, and import with
