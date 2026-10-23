@@ -1,10 +1,25 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { unzipSync } from 'fflate';
+import { buildRoom, m4, type RoomJson, type Palette } from './rebuilt';
 
-type Mat = number[][];
-interface Surface { id: string; parent?: string | null; dimensions: number[]; transform: Mat }
-interface RoomJson { id: string; name: string; ceilingHeight: number; floorPolygon: number[][]; walls: Surface[]; doors: Surface[]; windows: Surface[]; openings: Surface[]; objects: (Surface & { category: string })[] }
-interface Loaded { folder: string; manifest: any; room: RoomJson; group: THREE.Group; shell: THREE.Group; objects: THREE.Group; points: THREE.Points | null; walls: { mesh: THREE.Mesh; center: THREE.Vector3; normal: THREE.Vector3 }[]; bbox: THREE.Box3 }
+/** Where a scan's files come from: the dev server's /data folder or a dropped .zip. */
+interface Source { label: string; json(p: string): Promise<any>; buf(p: string): Promise<ArrayBuffer>; has(p: string): Promise<boolean> }
+const serverSource = (folder: string): Source => ({
+  label: folder,
+  json: async (p) => (await fetch(`/data/${folder}/${p}`)).json(),
+  buf: async (p) => { const r = await fetch(`/data/${folder}/${p}`); if (!r.ok) throw new Error(p); return r.arrayBuffer(); },
+  has: async (p) => (await fetch(`/data/${folder}/${p}`, { method: 'HEAD' })).ok,
+});
+function zipSource(name: string, bytes: Uint8Array): Source {
+  const files = unzipSync(bytes); const keys = Object.keys(files);
+  const man = keys.find((k) => k.endsWith('manifest.json') && k.split('/').length <= 2)!; const pre = man.slice(0, man.length - 'manifest.json'.length);
+  const get = (p: string) => files[pre + p];
+  return { label: name, json: async (p) => JSON.parse(new TextDecoder().decode(get(p))), buf: async (p) => { const f = get(p); if (!f) throw new Error(p); return f.buffer.slice(f.byteOffset, f.byteOffset + f.byteLength) as ArrayBuffer; }, has: async (p) => !!get(p) };
+}
+
+interface Loaded { folder: string; src: Source; tex: Partial<Record<'lod1' | 'full', THREE.Group>>; manifest: any; room: RoomJson; group: THREE.Group; shell: THREE.Group; objects: THREE.Group; points: THREE.Points | null; walls: { mesh: THREE.Mesh; center: THREE.Vector3; normal: THREE.Vector3 }[]; bbox: THREE.Box3 }
 
 const $ = <T extends HTMLElement>(s: string) => document.querySelector(s) as T;
 const canvas = $<HTMLCanvasElement>('#c');
@@ -24,74 +39,20 @@ let houseGroup: THREE.Group | null = null;
 const houseRooms: Loaded[] = [];
 
 const toast = (m: string) => { const t = $('#toast'); t.textContent = m; t.style.opacity = '1'; setTimeout(() => (t.style.opacity = '0'), 1800); };
-const m4 = (m: Mat) => new THREE.Matrix4().set(...(m.flat() as [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]));
 
 // ---------------------------------------------------------------- loading
-async function loadScan(folder: string): Promise<Loaded> {
-  const base = `/data/${folder}`;
-  const manifest = await (await fetch(`${base}/manifest.json`)).json();
-  const room: RoomJson = await (await fetch(`${base}/${manifest.rooms[0].file}`)).json();
+async function loadScan(src: Source, folder = src.label): Promise<Loaded> {
+  const manifest = await src.json('manifest.json');
+  let room: RoomJson = await src.json(manifest.rooms[0].file);
+  let pal: Palette = {};
+  if (await src.has('rebuilt/scene.json')) { const r = await src.json('rebuilt/scene.json'); room = r.room; pal = r.palette ?? {}; }  // scan-to-3JS output
   const group = new THREE.Group();
-  const shell = new THREE.Group();
-  const objects = new THREE.Group();
-  const walls: Loaded['walls'] = [];
-
-  const mats = {
-    wall: new THREE.MeshStandardMaterial({ color: 0xd9d4c4, roughness: 0.95, side: THREE.DoubleSide, transparent: true }),
-    floor: new THREE.MeshStandardMaterial({ color: 0x8a6240, roughness: 0.8, side: THREE.DoubleSide }),
-    ceil: new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 1, side: THREE.DoubleSide }),
-  };
-
-  // floor + ceiling from polygon
-  const sh = new THREE.Shape(room.floorPolygon.map(([x, z]) => new THREE.Vector2(x, -z)));
-  const floor = new THREE.Mesh(new THREE.ShapeGeometry(sh).rotateX(-Math.PI / 2), mats.floor);
-  const ceil = new THREE.Mesh(new THREE.ShapeGeometry(sh).rotateX(-Math.PI / 2).translate(0, room.ceilingHeight, 0), mats.ceil);
-  ceil.name = 'ceiling'; floor.name = 'floor';
-  shell.add(floor, ceil);
-
-  // walls with door/window cut-outs
-  for (const w of room.walls) {
-    const T = m4(w.transform), inv = T.clone().invert();
-    const [W, H, t] = w.dimensions;
-    const shape = new THREE.Shape([new THREE.Vector2(-W / 2, -H / 2), new THREE.Vector2(W / 2, -H / 2), new THREE.Vector2(W / 2, H / 2), new THREE.Vector2(-W / 2, H / 2)]);
-    const holes = [...room.doors, ...room.windows, ...room.openings].filter((o) => o.parent === w.id);
-    for (const o of holes) {
-      const c = new THREE.Vector3().setFromMatrixPosition(m4(o.transform)).applyMatrix4(inv);
-      const [dw, dh] = o.dimensions;
-      const p = new THREE.Path();
-      p.moveTo(c.x - dw / 2, c.y - dh / 2); p.lineTo(c.x + dw / 2, c.y - dh / 2); p.lineTo(c.x + dw / 2, c.y + dh / 2); p.lineTo(c.x - dw / 2, c.y + dh / 2); p.closePath();
-      shape.holes.push(p);
-    }
-    const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: false }).translate(0, 0, -t / 2), mats.wall.clone());
-    mesh.matrixAutoUpdate = false; mesh.matrix.copy(T); mesh.name = 'wall';
-    shell.add(mesh);
-    const center = new THREE.Vector3().setFromMatrixPosition(T);
-    const normal = new THREE.Vector3(0, 0, 1).transformDirection(T);
-    walls.push({ mesh, center, normal });
-  }
-  // door leaves + window glass
-  for (const d of room.doors) {
-    const [dw, dh, t] = d.dimensions;
-    const leaf = new THREE.Mesh(new THREE.BoxGeometry(dw * 0.96, dh * 0.98, t * 0.4), new THREE.MeshStandardMaterial({ color: 0x66411f, roughness: 0.7 }));
-    leaf.matrixAutoUpdate = false; leaf.matrix.copy(m4(d.transform)); shell.add(leaf);
-  }
-  for (const d of room.windows) {
-    const [dw, dh, t] = d.dimensions;
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(dw, dh, t * 0.15), new THREE.MeshStandardMaterial({ color: 0x8cc8ff, transparent: true, opacity: 0.45, roughness: 0.1 }));
-    glass.matrixAutoUpdate = false; glass.matrix.copy(m4(d.transform)); shell.add(glass);
-  }
-  // objects
-  const catColor: Record<string, number> = { table: 0x9a6a3a, chair: 0x4a7fb0, sofa: 0x7a5a9a, storage: 0x5a8a6a, bed: 0xb0705a };
-  for (const o of room.objects) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...(o.dimensions as [number, number, number])), new THREE.MeshStandardMaterial({ color: catColor[o.category] ?? 0x888888, roughness: 0.7 }));
-    mesh.matrixAutoUpdate = false; mesh.matrix.copy(m4(o.transform)); mesh.userData = { id: o.id, category: o.category, dims: o.dimensions };
-    objects.add(mesh);
-  }
+  const { shell, objects, walls } = buildRoom(room, pal);
 
   // point cloud
   let points: THREE.Points | null = null;
   try {
-    const buf = await (await fetch(`${base}/build/pointcloud.bin`)).arrayBuffer();
+    const buf = await src.buf('build/pointcloud.bin');
     const n = new DataView(buf).getUint32(0, true);
     const pos = new Float32Array(buf, 4, n * 3);
     const col8 = new Uint8Array(buf, 4 + n * 12, n * 3);
@@ -104,7 +65,7 @@ async function loadScan(folder: string): Promise<Loaded> {
   group.add(shell, objects); if (points) group.add(points);
   const bb = manifest.rooms[0].boundingBox;
   const bbox = new THREE.Box3(new THREE.Vector3(...(bb.min as [number, number, number])), new THREE.Vector3(...(bb.max as [number, number, number])));
-  return { folder, manifest, room, group, shell, objects, points, walls, bbox };
+  return { folder, src, tex: {}, manifest, room, group, shell, objects, points, walls, bbox };
 }
 
 // ---------------------------------------------------------------- state -> scene
@@ -112,8 +73,10 @@ function applyMode() {
   const rooms = state.tab === 'house' ? houseRooms : current ? [current] : [];
   const walk = state.view === 'walk', knoll = state.view === 'knolling', layout = state.view === 'layout';
   for (const L of rooms) {
+    const tex = state.src === 'tex';
     const showShell = (state.src === 'rebuilt' || state.src === 'overlay' || state.src === 'wire') && !knoll;
-    L.shell.visible = showShell; L.objects.visible = state.src !== 'scan' || knoll;
+    L.shell.visible = showShell; L.objects.visible = (state.src !== 'scan' && !tex) || knoll;
+    syncTex(L, tex && !knoll);
     if (L.points) L.points.visible = (state.src === 'scan' || state.src === 'overlay') && !knoll;
     const wire = state.src === 'wire';
     L.shell.traverse((o: any) => { if (o.material && o.isMesh) { o.material.wireframe = wire; } });
@@ -131,6 +94,14 @@ function applyMode() {
   resize();
 }
 
+function syncTex(L: Loaded, show: boolean) {
+  const want = state.quality === 'full' ? 'full' : 'lod1';
+  for (const k of ['lod1', 'full'] as const) if (L.tex[k]) L.tex[k]!.visible = show && k === want;
+  if (show && !L.tex[want]) {
+    const file = want === 'full' ? 'build/room.glb' : 'build/room_lod1.glb';
+    L.src.buf(file).then((buf) => new GLTFLoader().parse(buf, '', (g) => { g.scene.traverse((o: any) => { if (o.isMesh) o.material.side = THREE.FrontSide; }); L.tex[want] = g.scene; L.group.add(g.scene); applyMode(); }, () => toast('No textured model — run the pipeline build'))).catch(() => toast('No textured model — run the pipeline build'));
+  }
+}
 const knollGroups = new WeakMap<Loaded, THREE.Group>();
 function layoutKnolling(rooms: Loaded[]) {
   for (const L of rooms) {
@@ -140,10 +111,10 @@ function layoutKnolling(rooms: Loaded[]) {
     if (state.view !== 'knolling') { L.objects.position.set(0, 0, 0); continue; }
     L.objects.visible = false;
     const sx = L.bbox.max.x + 1.2; let x = sx, z = L.bbox.min.z;
-    for (const o of L.objects.children as THREE.Mesh[]) {
+    for (const o of L.objects.children) {
       const [w, h, d] = o.userData.dims;
-      const c = new THREE.Mesh(o.geometry, o.material); c.position.set(x + w / 2, h / 2 + 0.001, z + d / 2); c.rotation.set(0, 0, 0);
-      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry), new THREE.LineBasicMaterial({ color: 0xffffff })); c.add(edges);
+      const c = o.clone(true); c.matrixAutoUpdate = true; c.position.set(x + w / 2, h / 2 + 0.001, z + d / 2); c.quaternion.identity(); c.scale.set(1, 1, 1);
+      c.traverse((m: any) => { if (m.isMesh) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), new THREE.LineBasicMaterial({ color: 0xffffff }))); });
       g.add(c); x += w + 0.4;
     }
     const grid = new THREE.GridHelper(8, 16, 0x334, 0x223); grid.position.set(sx + 3, 0, L.bbox.min.z + 1.5); g.add(grid);
@@ -151,14 +122,15 @@ function layoutKnolling(rooms: Loaded[]) {
 }
 
 // ---------------------------------------------------------------- camera
-function frameRoom(L: Loaded, kind: 'home' | 'top' | 'front' | 'side') {
-  const c = L.bbox.getCenter(new THREE.Vector3()), s = L.bbox.getSize(new THREE.Vector3());
+function frameRoom(L: Loaded, kind: 'home' | 'top' | 'front' | 'side', box: THREE.Box3 = L.bbox) {
+  const c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
   const r = Math.max(s.x, s.z);
   const targets = { home: new THREE.Vector3(c.x + r * 0.7, s.y * 2.2 + r * 0.45, c.z + r * 1.1), top: new THREE.Vector3(c.x, r * 1.5 + 2, c.z + 0.01), front: new THREE.Vector3(c.x, c.y, c.z + r * 1.6), side: new THREE.Vector3(c.x + r * 1.6, c.y, c.z) };
   state.view = kind === 'top' ? 'layout' : state.view === 'walk' ? 'dollhouse' : state.view;
   camera.position.copy(targets[kind]); orbit.target.copy(c); orbit.update();
 }
 
+function frameKnolling(L: Loaded) { const c = L.bbox; camera.position.set(c.max.x + 3.5, 5, c.min.z + 3.5); orbit.target.set(c.max.x + 3.2, 0, c.min.z + 0.8); orbit.update(); }
 const keys = new Set<string>(); let yaw = 0, pitch = 0;
 function enterWalk(L: Loaded) {
   const c = L.bbox.getCenter(new THREE.Vector3());
@@ -264,7 +236,9 @@ async function enterHouse() {
     const a = alignment[L.folder]; L.group.rotation.y = a?.yaw ?? 0;
     L.group.position.set(a?.x ?? x, 0, a?.z ?? 0); x += L.bbox.max.x + 1; houseGroup.add(L.group);
   }
-  scene.add(houseGroup); if (houseRooms[0]) frameRoom(houseRooms[0], 'home');
+  scene.add(houseGroup); houseGroup.updateMatrixWorld(true);
+  const all = new THREE.Box3(); for (const L of houseRooms) all.union(L.bbox.clone().applyMatrix4(L.group.matrixWorld));
+  if (houseRooms[0]) frameRoom(houseRooms[0], 'home', all);
   applyMode();
 }
 
@@ -287,12 +261,12 @@ async function init() {
     el.onclick = async () => {
       state.tab = 'rooms'; document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.tab === 'rooms'));
       houseGroup && scene.remove(houseGroup);
-      loaded[f] ||= await loadScan(f); list.querySelectorAll('.item').forEach((x) => x.classList.remove('on')); el.classList.add('on'); select(loaded[f]);
+      loaded[f] ||= await loadScan(serverSource(f), f); list.querySelectorAll('.item').forEach((x) => x.classList.remove('on')); el.classList.add('on'); select(loaded[f]);
     };
     list.appendChild(el);
     el.dataset.f = f;
   }
-  for (const f of index) { houseRooms.push((loaded[f] ||= await loadScan(f))); }
+  for (const f of index) { houseRooms.push((loaded[f] ||= await loadScan(serverSource(f), f))); }
   const params = new URLSearchParams(location.search);
   const want = params.get('room');
   const first = (list.querySelector(want ? `[data-f="${want}"]` : '.item') as HTMLElement) ?? (list.firstElementChild as HTMLElement);
@@ -302,9 +276,10 @@ async function init() {
   const cam = params.get('cam')?.split(',').map(Number);
   if (cam?.length === 6 && current) { camera.position.set(cam[0], cam[1], cam[2]); orbit.target.set(cam[3], cam[4], cam[5]); orbit.update(); }
   if (state.view === 'walk' && current) enterWalk(current);
+  if (state.view === 'knolling' && current && !cam) frameKnolling(current);
   applyMode();
 
-  $('#views').onclick = (e) => { const v = (e.target as HTMLElement).dataset.view; if (!v || !current) return; state.view = v; if (v === 'walk') { enterWalk(current); camera.near = 0.05; } else if (v === 'layout') frameRoom(current, 'top'), (state.view = 'layout'); else if (v === 'knolling') { const c = current.bbox; camera.position.set(c.max.x + 4, 6, c.max.z + 2); orbit.target.set(c.max.x + 4, 0, c.min.z + 1.5); orbit.update(); } else frameRoom(current, 'home'); applyMode(); };
+  $('#views').onclick = (e) => { const v = (e.target as HTMLElement).dataset.view; if (!v || !current) return; state.view = v; if (v === 'walk') { enterWalk(current); camera.near = 0.05; } else if (v === 'layout') frameRoom(current, 'top'), (state.view = 'layout'); else if (v === 'knolling') frameKnolling(current); else frameRoom(current, 'home'); applyMode(); };
   $('#sources').onclick = (e) => { const s = (e.target as HTMLElement).dataset.src; if (s) { state.src = s; applyMode(); } };
   $('#quality').onclick = (e) => { const q = (e.target as HTMLElement).dataset.q; if (q) { state.quality = q; applyMode(); } };
   $('#presets').onclick = (e) => { const p = (e.target as HTMLElement).dataset.p as any; if (p && current) { if (state.view === 'walk') state.view = 'dollhouse'; frameRoom(current, p); applyMode(); } };
@@ -316,6 +291,18 @@ async function init() {
   $('#copy').onclick = async () => { const u = writeUrl(); try { await navigator.clipboard.writeText(u); } catch { /* ignore */ } history.replaceState(null, '', u); toast('View link copied'); };
   document.querySelectorAll<HTMLButtonElement>('.tabs button').forEach((b) => (b.onclick = () => { document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b)); b.dataset.tab === 'house' ? enterHouse() : first?.click(); }));
   canvas.addEventListener('click', () => { if (state.view === 'walk' && !state.measure) canvas.requestPointerLock?.(); });
+  addEventListener('dragover', (e) => { e.preventDefault(); $('#drop').style.display = 'flex'; });
+  addEventListener('dragleave', (e) => { if (!(e as DragEvent).relatedTarget) $('#drop').style.display = 'none'; });
+  addEventListener('drop', async (e) => {
+    e.preventDefault(); $('#drop').style.display = 'none';
+    const file = e.dataTransfer?.files[0]; if (!file) return;
+    try {
+      const L = await loadScan(zipSource(file.name, new Uint8Array(await file.arrayBuffer())), file.name.replace(/\.zip$/i, ''));
+      const el = document.createElement('div'); el.className = 'item'; el.innerHTML = `${L.manifest.scanName} v${L.manifest.version}<small>dropped · ${L.manifest.counts.frames} frames</small>`;
+      el.onclick = () => { state.tab = 'rooms'; list.querySelectorAll('.item').forEach((x) => x.classList.remove('on')); el.classList.add('on'); select(L); };
+      list.prepend(el); houseRooms.push(L); el.click(); toast('Loaded ' + file.name);
+    } catch (err) { toast('Could not read that zip (needs manifest.json + build/)'); console.error(err); }
+  });
   (window as any).__ready = true;
   frame();
 }

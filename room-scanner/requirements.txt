@@ -1,0 +1,12 @@
+numpy
+scipy
+Pillow
+PyYAML
+jsonschema
+trimesh
+scikit-image
+xatlas
+shapely
+mapbox-earcut
+fast-simplification
+# optional (needs libEGL on Linux; not used by default): open3d

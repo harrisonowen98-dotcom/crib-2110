@@ -35,6 +35,11 @@ def fuse(root: Path, voxel=None, min_conf=None, stride=1):
     inv = inv.ravel()
     Pm = np.stack([np.bincount(inv, P[:, i]) / cnt for i in range(3)], 1).astype(np.float32)
     Cm = np.stack([np.bincount(inv, C[:, i].astype(np.float64)) / cnt for i in range(3)], 1).round().astype(np.uint8)
+    from scipy.spatial import cKDTree
+    nb = CFG["outlier_nb_neighbors"]
+    dists, _ = cKDTree(Pm).query(Pm, k=nb + 1)
+    md = dists[:, 1:].mean(1); keep = md < md.mean() + CFG["outlier_std_ratio"] * md.std()
+    removed = int((~keep).sum()); Pm, Cm = Pm[keep], Cm[keep]
     out = root / "build"; out.mkdir(exist_ok=True)
     with open(out / "pointcloud.bin", "wb") as f:  # [uint32 N][N*3 float32 xyz][N*3 uint8 rgb]
         f.write(struct.pack("<I", len(Pm))); f.write(Pm.tobytes()); f.write(Cm.tobytes())
@@ -42,7 +47,7 @@ def fuse(root: Path, voxel=None, min_conf=None, stride=1):
         f.write(f"ply\nformat binary_little_endian 1.0\nelement vertex {len(Pm)}\nproperty float x\nproperty float y\nproperty float z\nproperty uchar red\nproperty uchar green\nproperty uchar blue\nend_header\n".encode())
         rec = np.zeros(len(Pm), dtype=[("p", "<f4", 3), ("c", "u1", 3)]); rec["p"], rec["c"] = Pm, Cm
         f.write(rec.tobytes())
-    return dict(points=int(len(Pm)), raw_points=int(len(P)), voxel=voxel)
+    return dict(points=int(len(Pm)), raw_points=int(len(P)), voxel=voxel, outliers_removed=removed)
 
 
 if __name__ == "__main__":

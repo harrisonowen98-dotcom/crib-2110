@@ -1,0 +1,48 @@
+# XcodeGen spec: `brew install xcodegen && xcodegen generate` -> RoomScanner.xcodeproj  (see ../BUILD_IOS.md)
+name: RoomScanner
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    DEVELOPMENT_TEAM: ""            # set your Apple ID team in Xcode > Signing & Capabilities (free account works)
+    CODE_SIGN_STYLE: Automatic
+targets:
+  RoomScanner:
+    type: application
+    platform: iOS
+    sources: [RoomScanner]
+    info:
+      path: RoomScanner/Info.plist
+      properties:
+        CFBundleDisplayName: Room Scanner
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSCameraUsageDescription: Room Scanner uses the camera and LiDAR to capture photos and depth of the room.
+        UIRequiredDeviceCapabilities: [arkit]
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIBackgroundModes: []
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.RoomScanner
+  RoomScannerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [RoomScannerTests]
+    dependencies:
+      - target: RoomScanner
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.RoomScannerTests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/RoomScanner.app/RoomScanner"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  RoomScanner:
+    build: { targets: { RoomScanner: all } }
+    test: { targets: [RoomScannerTests] }

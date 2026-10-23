@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 420" font-family="system-ui,Segoe UI,sans-serif" font-size="14">
+<defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#4d8dff"/></marker>
+<style>.b{fill:#161a24;stroke:#2b3246;stroke-width:1.5;rx:10}.t{fill:#e8ebf2}.m{fill:#8b93a7;font-size:12px}.h{fill:#4d8dff;font-weight:700}</style></defs>
+<rect width="1100" height="420" fill="#0b0d12"/>
+<text x="24" y="34" class="t" font-size="20" font-weight="700">Room Scanner — iPhone → export zip → pipeline → viewer</text>
+<rect class="b" x="24" y="64" width="230" height="170"/><text x="40" y="92" class="h">1 · iPhone (ios/)</text>
+<text x="40" y="116" class="t">ARKit LiDAR sceneDepth</text><text x="40" y="136" class="t">Full-res keyframe photos</text><text x="40" y="156" class="t">Camera poses + exposure</text><text x="40" y="176" class="t">RoomPlan walls/doors/objects</text><text x="40" y="196" class="t">Classified LiDAR mesh</text><text x="40" y="218" class="m">Save room → Office_v4_2026-10-09</text>
+<rect class="b" x="300" y="64" width="230" height="170"/><text x="316" y="92" class="h">2 · Export folder + .zip</text>
+<text x="316" y="116" class="t">manifest.json (README_FOR_AI)</text><text x="316" y="136" class="t">depth/ frames.json + depth + rgb</text><text x="316" y="156" class="t">photos/  mesh/  rooms/</text><text x="316" y="178" class="m">meters · Y-up · right-handed</text><text x="316" y="198" class="m">AirDrop / Files → PC</text>
+<rect class="b" x="576" y="64" width="250" height="170"/><text x="592" y="92" class="h">3 · pipeline/ (Python)</text>
+<text x="592" y="116" class="t">validate → point cloud (fuse)</text><text x="592" y="136" class="t">TSDF mesh → gap-fill → UV texture</text><text x="592" y="156" class="t">shell · objects · build_report</text><text x="592" y="176" class="t">refine: render ↔ photo ↔ LiDAR loop</text><text x="592" y="196" class="t">stitch rooms → house</text><text x="592" y="218" class="m">python -m pipeline build|refine|stitch</text>
+<rect class="b" x="872" y="64" width="204" height="170"/><text x="888" y="92" class="h">4 · viewer/ (Three.js)</text>
+<text x="888" y="116" class="t">Dollhouse · Layout</text><text x="888" y="136" class="t">Knolling · Walk around</text><text x="888" y="156" class="t">Rebuilt · Scan · Overlay</text><text x="888" y="176" class="t">Wireframe · Textured</text><text x="888" y="198" class="t">Measure · Drone · House</text><text x="888" y="218" class="m">npm run dev → :5187</text>
+<path d="M254 150 H298" stroke="#4d8dff" stroke-width="2.5" marker-end="url(#a)"/><path d="M530 150 H574" stroke="#4d8dff" stroke-width="2.5" marker-end="url(#a)"/><path d="M826 150 H870" stroke="#4d8dff" stroke-width="2.5" marker-end="url(#a)"/>
+<rect class="b" x="24" y="268" width="1052" height="130"/><text x="40" y="296" class="h">Quality loop (scan-to-3js skill)</text>
+<text x="40" y="322" class="t">Rebuilt scene (shell + one true-scale object each) → render from every real photo's pose → compare with photo (SSIM/edges) and LiDAR depth</text>
+<text x="40" y="344" class="t">→ rank errors → fix worst (colour, size snap to LiDAR, primitive variant, missing object) → log score → repeat until gain &lt; 0.002</text>
+<text x="40" y="372" class="m">Outputs per iteration: rebuilt/iter_###/ (scene.json, contact sheet real | render | diff) · rebuilt/scores.csv · scene.json / scene.glb / scene.ts</text>
+</svg>

@@ -8,5 +8,6 @@ p.on('pageerror', (e) => console.log('pageerror:', e.message));
 await p.goto('http://127.0.0.1:5187/' + q);
 await p.waitForFunction('window.__ready', null, { timeout: 30000 });
 await p.waitForTimeout(1500);
+for (const sel of (process.env.CLICKS || '').split(',').filter(Boolean)) { await p.click(sel); await p.waitForTimeout(2500); }
 await p.screenshot({ path: out });
 await b.close();

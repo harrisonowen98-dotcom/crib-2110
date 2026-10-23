@@ -18,7 +18,7 @@ function dataPlugin() {
           return res.end(JSON.stringify(scans));
         }
         const f = path.join(DATA, url);
-        if (!f.startsWith(DATA) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return next();
+        if (!f.startsWith(DATA) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.statusCode = 404; return res.end('not found'); }  // no SPA fallback for data files
         res.setHeader('Content-Type', mime[path.extname(f)] || 'application/octet-stream');
         fs.createReadStream(f).pipe(res);
       });

@@ -34,7 +34,7 @@ README_FOR_AI = (
 def scene(cfg):
     r = cfg["room"]
     W, D, H = r["width"], r["depth"], r["height"]
-    table = dict(c=np.array([3.7, 0.0, 2.8]), size=np.array([1.2, 0.75, 0.7]))  # base center x,z ; (sx, h, sz)
+    table = dict(c=np.array([0.74 * W, 0.0, 0.7 * D]), size=np.array([1.2, 0.75, 0.7]))  # base center x,z ; (sx, h, sz)
     door = dict(wall="z0", u0=0.9, u1=1.8, h=2.05)      # on wall z=0, u along +x
     window = dict(wall="x1", u0=1.2, u1=2.8, v0=0.95, v1=2.1)  # on wall x=W, u along +z
     return W, D, H, table, door, window
@@ -181,7 +181,7 @@ def build_mesh_ply(path, W, D, H, table, step=0.25):
             f.write(struct.pack("<Biii", 3, *tri))
 
 
-def room_json(W, D, H, table, door, window):
+def room_json(W, D, H, table, door, window, name="Test Room"):
     def T(x, y, z, yaw=0.0):
         c, s = math.cos(yaw), math.sin(yaw)
         return mat([[c, 0, s, x], [0, 1, 0, y], [-s, 0, c, z], [0, 0, 0, 1]])
@@ -198,7 +198,7 @@ def room_json(W, D, H, table, door, window):
     windows = [dict(id="window-0", parent="wall-1", dimensions=[ww, wh, t], transform=T(W, (window["v0"] + window["v1"]) / 2, (window["u0"] + window["u1"]) / 2, -math.pi / 2))]
     objects = [dict(id="object-0", category="table", dimensions=[float(table["size"][0]), float(table["size"][1]), float(table["size"][2])],
                     transform=T(float(table["c"][0]), float(table["size"][1] / 2), float(table["c"][2])), confidence="high")]
-    return dict(id="room-0", name="Test Room", units="meters", ceilingHeight=H,
+    return dict(id="room-0", name=name, units="meters", ceilingHeight=H,
                 floorPolygon=[[0, 0], [W, 0], [W, D], [0, D]], walls=walls, doors=doors, windows=windows, openings=[], objects=objects)
 
 
@@ -209,8 +209,11 @@ def main():
     ap.add_argument("--name", default="Test Room")
     ap.add_argument("--version", type=int, default=1)
     ap.add_argument("--frames", type=int, default=cfg["frames"])
+    ap.add_argument("--width", type=float); ap.add_argument("--depth", type=float)
     a = ap.parse_args()
 
+    if a.width: cfg["room"]["width"] = a.width
+    if a.depth: cfg["room"]["depth"] = a.depth
     rng = np.random.default_rng(cfg["seed"])
     W, D, H, table, door, window = scene(cfg)
     date = datetime.date.today().isoformat()
@@ -233,9 +236,12 @@ def main():
     for i in range(n):
         f = i / n
         ang = f * 2 * math.pi * 3
-        r = 0.6 + 0.5 * math.sin(f * 2 * math.pi * 2)
-        pos = np.array([2.1 + r * math.cos(ang * 0.5), 1.35 + 0.15 * math.sin(ang), 1.6 + r * 0.7 * math.sin(ang * 0.5)])
+        r = 1.0 + 0.45 * math.sin(f * 2 * math.pi * 2)
+        pos = np.array([0.42 * W + r * math.cos(ang * 0.5), 1.35 + 0.15 * math.sin(ang), 0.4 * D + r * 0.7 * math.sin(ang * 0.5)])
         yaw = ang; pitch = math.radians(-12 + 28 * math.sin(f * 2 * math.pi * 5))
+        if i % 3 == 0:   # every 3rd frame (the keyframe photos) looks at the table, like a person circling an object
+            dv = np.array([table["c"][0], 0.4, table["c"][2]]) - pos
+            yaw = math.atan2(dv[0], -dv[2]); pitch = math.atan2(dv[1], math.hypot(dv[0], dv[2]))
         T = pose(pos, yaw, pitch)
         R, o = T[:3, :3], T[:3, 3]
         name = f"{i:05d}"
@@ -285,7 +291,7 @@ def main():
                    frames=frames), open(root / "depth" / "frames.json", "w"), indent=1)
 
     build_mesh_ply(root / "mesh" / "mesh.ply", W, D, H, table)
-    room = room_json(W, D, H, table, door, window)
+    room = room_json(W, D, H, table, door, window, a.name)
     json.dump(room, open(root / "rooms" / "room-0.json", "w"), indent=1)
 
     (root / "README_FOR_AI.md").write_text("# Room scan export\n\n" + README_FOR_AI + "\n\nSee docs/SCHEMA.md in the Room Scanner project for the full specification.\n")

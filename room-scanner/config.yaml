@@ -5,7 +5,8 @@ pipeline:
   outlier_nb_neighbors: 20
   outlier_std_ratio: 2.0
   fill_gaps: true
-  tsdf_voxel: 0.02
+  tsdf_voxel: 0.04
+  max_faces: 30000
   texture_size: 4096
   max_iterations_refine: 8
 capture:
