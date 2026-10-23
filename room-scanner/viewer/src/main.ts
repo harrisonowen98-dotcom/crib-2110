@@ -25,7 +25,8 @@ const $ = <T extends HTMLElement>(s: string) => document.querySelector(s) as T;
 const canvas = $<HTMLCanvasElement>('#c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0b0d12);
+scene.background = new THREE.Color(0x0a1220);
+const bgGrid = new THREE.GridHelper(60, 120, 0x16233a, 0x111b2e); bgGrid.position.y = -0.02; scene.add(bgGrid);
 const camera = new THREE.PerspectiveCamera(55, 1, 0.05, 200);
 const orbit = new OrbitControls(camera, canvas);
 orbit.enableDamping = true;
@@ -79,8 +80,8 @@ function applyMode() {
     syncTex(L, tex && !knoll);
     if (L.points) L.points.visible = (state.src === 'scan' || state.src === 'overlay') && !knoll;
     const wire = state.src === 'wire';
-    L.shell.traverse((o: any) => { if (o.material && o.isMesh) { o.material.wireframe = wire; } });
-    L.objects.traverse((o: any) => { if (o.material) o.material.wireframe = wire; });
+    const paint = (o: any) => { if (o.material && o.isMesh) { o.material.wireframe = wire; if (!o.userData.base) o.userData.base = o.material.color?.clone(); if (o.material.color) o.material.color.copy(wire ? new THREE.Color(0x5ec8ff) : o.userData.base); if (o.material.emissive) o.material.emissive.set(wire ? 0x2a6a88 : 0x000000); } };
+    L.shell.traverse(paint); L.objects.traverse(paint);
     if (L.points) (L.points.material as THREE.PointsMaterial).clippingPlanes = walk ? [] : [ceilClip];
     const ceil = L.shell.getObjectByName('ceiling'); if (ceil) ceil.visible = walk;
     L.shell.getObjectByName('floor')!.visible = true;
@@ -241,7 +242,7 @@ addEventListener('resize', resize);
 // ---------------------------------------------------------------- UI
 function select(L: Loaded) {
   if (current) scene.remove(current.group);
-  current = L; scene.add(L.group);
+  current = L; scene.add(L.group); $('#crumb').textContent = L.manifest.scanName;
   frameRoom(L, 'home');
   applyMode();
 }

@@ -3,19 +3,18 @@
 <title>Room Explorer</title><link rel="stylesheet" href="/src/style.css"></head>
 <body>
 <aside id="side">
-  <div class="brand">Room Explorer</div>
+  <div class="brand"><span class="logo">⌂</span> Room Explorer <span id="crumb"></span></div>
   <div class="tabs"><button data-tab="rooms" class="on">Rooms</button><button data-tab="house">Whole house</button></div>
-  <div id="roomlist"></div>
+  <h4>Rooms <small>Explore your space</small></h4><div id="roomlist"></div>
   <h4>View</h4><div class="grid2" id="views">
     <button data-view="dollhouse">Dollhouse</button><button data-view="layout">Layout</button>
     <button data-view="knolling">Knolling</button><button data-view="walk">Walk around</button></div>
-  <h4>Source</h4><div class="grid2" id="sources">
-    <button data-src="rebuilt">Rebuilt</button><button data-src="scan">Scan</button>
-    <button data-src="overlay">Overlay</button><button data-src="wire">Wireframe</button><button data-src="tex">Textured</button></div>
+  <h4>Source</h4><div class="pills" id="sources">
+    <button data-src="rebuilt">Rebuilt</button><button data-src="scan">Scan</button><button data-src="overlay">Overlay</button><button data-src="wire">Wireframe</button><button data-src="tex">Textured</button></div>
   <h4>Camera</h4>
-  <div class="grid2"><button id="drone">Drone tour</button><button id="measure">Measure</button></div>
   <div class="grid4" id="presets"><button data-p="home">Home</button><button data-p="top">Top</button><button data-p="front">Front</button><button data-p="side">Side</button></div>
-  <div class="grid2"><button id="zin">Zoom +</button><button id="zout">Zoom −</button></div>
+  <div class="zoomrow"><span>Zoom</span><button id="zout">−</button><button id="zin">+</button></div>
+  <div class="grid2"><button id="drone">Drone tour</button><button id="measure">Measure</button></div>
   <h4>Render quality</h4><div class="grid2" id="quality"><button data-q="auto">Auto</button><button data-q="full">Full detail</button></div>
   <div id="readout"></div>
   <button id="copy">Copy view link</button>
