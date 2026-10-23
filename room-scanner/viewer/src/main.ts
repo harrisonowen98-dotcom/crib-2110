@@ -90,7 +90,7 @@ function applyMode() {
   document.querySelectorAll<HTMLButtonElement>('#views button').forEach((b) => b.classList.toggle('on', b.dataset.view === state.view));
   document.querySelectorAll<HTMLButtonElement>('#sources button').forEach((b) => b.classList.toggle('on', b.dataset.src === state.src));
   document.querySelectorAll<HTMLButtonElement>('#quality button').forEach((b) => b.classList.toggle('on', b.dataset.q === state.quality));
-  $('#hint').textContent = walk ? 'Click canvas · WASD to move · mouse/drag to look · Shift = run' : layout ? 'Top-down floor plan' : knoll ? 'Every object laid out flat' : 'Drag to orbit · scroll to zoom · walls facing you fade';
+  $('#hint').textContent = walk ? 'WASD + mouse/drag to look · Shift = run · touch: left thumb moves, right thumb looks' : layout ? 'Top-down floor plan' : knoll ? 'Every object laid out flat' : 'Drag to orbit · scroll to zoom · walls facing you fade';
   resize();
 }
 
@@ -143,7 +143,8 @@ function updateWalk(dt: number) {
   const mv = new THREE.Vector3();
   if (keys.has('w') || keys.has('arrowup')) mv.add(f); if (keys.has('s') || keys.has('arrowdown')) mv.sub(f);
   if (keys.has('d') || keys.has('arrowright')) mv.add(r); if (keys.has('a') || keys.has('arrowleft')) mv.sub(r);
-  if (mv.lengthSq()) camera.position.addScaledVector(mv.normalize(), sp);
+  if (touchStick.lengthSq() > 0.01) { mv.addScaledVector(f, -touchStick.y).addScaledVector(r, touchStick.x); }
+  if (mv.lengthSq()) camera.position.addScaledVector(mv.lengthSq() > 1 ? mv.normalize() : mv, sp);
   const b = current.bbox, m = 0.3; // collision: stay inside wall shell (floor & ceiling fixed by eye height)
   camera.position.x = THREE.MathUtils.clamp(camera.position.x, b.min.x + m, b.max.x - m);
   camera.position.z = THREE.MathUtils.clamp(camera.position.z, b.min.z + m, b.max.z - m);
@@ -156,6 +157,24 @@ function updateWalk(dt: number) {
   camera.rotation.set(pitch, -yaw, 0, 'YXZ');
 }
 
+// touch: left half = virtual stick (move), right half = look
+const touchStick = new THREE.Vector2(); const tch = { move: -1, look: -1, sx: 0, sy: 0, lx: 0, ly: 0 };
+canvas.addEventListener('touchstart', (e) => {
+  if (state.view !== 'walk') return; e.preventDefault(); const r = canvas.getBoundingClientRect();
+  for (const t of Array.from(e.changedTouches)) {
+    if (t.clientX - r.left < r.width / 2 && tch.move < 0) { tch.move = t.identifier; tch.sx = t.clientX; tch.sy = t.clientY; }
+    else if (tch.look < 0) { tch.look = t.identifier; tch.lx = t.clientX; tch.ly = t.clientY; }
+  }
+}, { passive: false });
+canvas.addEventListener('touchmove', (e) => {
+  if (state.view !== 'walk') return; e.preventDefault();
+  for (const t of Array.from(e.changedTouches)) {
+    if (t.identifier === tch.move) touchStick.set(THREE.MathUtils.clamp((t.clientX - tch.sx) / 60, -1, 1), THREE.MathUtils.clamp((t.clientY - tch.sy) / 60, -1, 1));
+    else if (t.identifier === tch.look) { yaw += (t.clientX - tch.lx) * 0.005; pitch = THREE.MathUtils.clamp(pitch - (t.clientY - tch.ly) * 0.005, -1.3, 1.3); tch.lx = t.clientX; tch.ly = t.clientY; }
+  }
+}, { passive: false });
+const touchEnd = (e: TouchEvent) => { for (const t of Array.from(e.changedTouches)) { if (t.identifier === tch.move) { tch.move = -1; touchStick.set(0, 0); } if (t.identifier === tch.look) tch.look = -1; } };
+canvas.addEventListener('touchend', touchEnd); canvas.addEventListener('touchcancel', touchEnd);
 addEventListener('keydown', (e) => keys.add(e.key.toLowerCase()));
 addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 let drag = false;

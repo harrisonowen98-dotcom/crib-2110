@@ -1,12 +1,13 @@
 import argparse, sys
 from pathlib import Path
+from .common import CFG
 
 
 def main():
     ap = argparse.ArgumentParser(prog="pipeline")
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build", help="build point cloud, textured GLB, shell, objects, report")
-    b.add_argument("export"); b.add_argument("--fill-gaps", dest="fill", action="store_true", default=True); b.add_argument("--no-fill-gaps", dest="fill", action="store_false")
+    b.add_argument("export"); b.add_argument("--fill-gaps", dest="fill", action="store_true", default=CFG["fill_gaps"]); b.add_argument("--no-fill-gaps", dest="fill", action="store_false")
     b.add_argument("--voxel", type=float); b.add_argument("--tex-res", type=int); b.add_argument("--frame-step", type=int, default=1); b.add_argument("--skip-texture", action="store_true")
     s = sub.add_parser("stitch", help="align rooms into one house frame")
     s.add_argument("rooms", nargs="+"); s.add_argument("--out", default="house"); s.add_argument("--icp", action="store_true", help="refine door seed with ICP on overlapping geometry")
