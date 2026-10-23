@@ -1,7 +1,6 @@
 # XcodeGen spec: `brew install xcodegen && xcodegen generate` -> RoomScanner.xcodeproj  (see ../BUILD_IOS.md)
 name: RoomScanner
 options:
-  xcodeVersion: "15.4"          # project format the macos-14 runner's Xcode can read
   bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "17.0"

@@ -7,16 +7,21 @@ on:
     paths: ['room-scanner/ios/**', '.github/workflows/build-ios.yml']
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     defaults: { run: { working-directory: room-scanner/ios } }
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: brew install xcodegen
-      - name: Select Xcode 15.4
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app && xcodebuild -version
+      - name: Select newest Xcode 16
+        run: |
+          ls /Applications | grep -i xcode || true
+          X=$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1); echo "using $X"; sudo xcode-select -s "$X"; xcodebuild -version
       - name: Generate Xcode project
         run: xcodegen generate
+      - name: Diagnose project
+        run: |
+          head -12 RoomScanner.xcodeproj/project.pbxproj; xcodebuild -list -project RoomScanner.xcodeproj 2>&1 | head -30
       - name: Build (no signing)
         run: |
           set -o pipefail
